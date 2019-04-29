@@ -107,7 +107,13 @@ def rmsprop(w, dw, config=None):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    lr = config['learning_rate']
+    dr = config['decay_rate']
+    eps = config['epsilon']
+
+    config['cache'] = (dr * config['cache']) + ((1 - dr) * dw ** 2)  # update cache with squared grads
+    vanilla_grad = -(lr * dw)
+    next_w = w + (vanilla_grad / (np.sqrt(config['cache']) + eps))
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -116,13 +122,16 @@ def rmsprop(w, dw, config=None):
 
     return next_w, config
 
+def lin_combo(x1, x2, keep_frac):
+    return (x1 * keep_frac) + (x2 * (1-keep_frac))
 
-def adam(w, dw, config=None):
+
+def adam(w, dw, c=None):
     """
     Uses the Adam update rule, which incorporates moving averages of both the
     gradient and its square and a bias correction term.
 
-    config format:
+    c format:
     - learning_rate: Scalar learning rate.
     - beta1: Decay rate for moving average of first moment of gradient.
     - beta2: Decay rate for moving average of second moment of gradient.
@@ -131,31 +140,39 @@ def adam(w, dw, config=None):
     - v: Moving average of squared gradient.
     - t: Iteration number.
     """
-    if config is None: config = {}
-    config.setdefault('learning_rate', 1e-3)
-    config.setdefault('beta1', 0.9)
-    config.setdefault('beta2', 0.999)
-    config.setdefault('epsilon', 1e-8)
-    config.setdefault('m', np.zeros_like(w))
-    config.setdefault('v', np.zeros_like(w))
-    config.setdefault('t', 0)
+    if c is None: c = {}
+    c.setdefault('learning_rate', 1e-3)
+    c.setdefault('beta1', 0.9)
+    c.setdefault('beta2', 0.999)
+    c.setdefault('epsilon', 1e-8)
+    c.setdefault('m', np.zeros_like(w))
+    c.setdefault('v', np.zeros_like(w))
+    c.setdefault('t', 0)
 
     next_w = None
+
+
     ###########################################################################
     # TODO: Implement the Adam update formula, storing the next value of w in #
     # the next_w variable. Don't forget to update the m, v, and t variables   #
-    # stored in config.                                                       #
+    # stored in c.                                                       #
     #                                                                         #
     # NOTE: In order to match the reference output, please modify t _before_  #
     # using it in any calculations.                                           #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
 
+    c['t'] += 1
+    t = c['t']
+    c['m'] = lin_combo(c['m'], dw, c['beta1'])
+    c['v'] = lin_combo(c['v'], dw ** 2, c['beta2'])
+    mhat = c['m'] / (1 - c['beta1'] ** t)
+    vhat = np.sqrt(c['v'] / (1 - c['beta2'] ** t))
+    next_w = w - (c['learning_rate'] * mhat)/ (vhat + c['epsilon'])
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
 
-    return next_w, config
+    return next_w, c
