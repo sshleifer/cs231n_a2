@@ -292,7 +292,7 @@ class FullyConnectedNet(object):
         """
         X = X.astype(self.dtype)
         mode = 'test' if y is None else 'train'
-
+        self.use_batchnorm = self.normalization == 'batchnorm':
         # Set train/test mode for batchnorm params and dropout param since they
         # behave differently during training and testing.
         if self.use_dropout:
@@ -315,7 +315,24 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        for i, layer in enumerate(range(self.num_layers)):
+            if layer == self.num_layers - 1:
+                forward_func = affine_forward
+            else:
+                forward_func = affine_relu_forward
+            x, cache = forward_func(x,
+                                    self.params['W{}'.format(i)],
+                                    self.params['b{}'.format(i)])
+            if self.use_dropout:
+                x, do_cache = dropout_forward(x, self.dropout_param)
+                dropout_cache[layer] = do_cache
+            if self.use_batchnorm and layer <= len(self.bn_params):
+                g, b = (self.params['gamma{}'.format(layer)], self.params['beta{}'.format(layer)])
+
+                x, bcache = batchnorm_forward(x, g, b, self.bn_params[layer])
+                bn_cache[layer] = bcache
+            cache_dict[layer] = cache
+        scores = x
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -342,7 +359,27 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        loss, dout = softmax_loss(scores, y)
+        reg_losses = [np.sum(v * v) for k, v in self.params.items()
+                      if k.startswith('W')]
+        reg_loss = np.sum(reg_losses) * self.reg * .5
+        loss += reg_loss
+        grads = {}
+        dx = dout
+        for i, layer in enumerate(reversed(range(self.num_layers))):
+            if layer == self.num_layers - 1:
+                backward_func = affine_backward
+            else:
+                backward_func = affine_relu_backward
+            if self.use_batchnorm and layer in bn_cache:
+                dx, dgamma, dbeta = batchnorm_backward(dx, bn_cache[layer])
+                grads['gamma{}'.format(layer)] = dgamma
+                grads['beta{}'.format(layer)] = dbeta
+            if self.use_dropout and layer in dropout_cache:
+                dx = dropout_backward(dx, dropout_cache[layer])
+            dx, dw, db = backward_func(dx, cache_dict[layer])
+            grads['W{}'.format(layer)] = dw + self.reg * self.params['W{}'.format(layer)]
+            grads['b{}'.format(layer)] = db
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
