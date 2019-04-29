@@ -261,14 +261,13 @@ class FullyConnectedNet(object):
         self.params[f'b{self.num_layers}'] = np.zeros(num_classes)
 
         for i in range(self.num_layers):
-            if f'W{i+1}' in self.params: continue
-            self.params[f'W{i+1}'] = random_init_w(hidden_dims[i-1], hidden_dims[i])
-            self.params[f'b{i+1}'] = np.zeros(hidden_dims[i])
-
-        for i in range(self.num_layers): ### Make these even if dont need
+            if f'W{i+1}' not in self.params:
+                self.params[f'W{i+1}'] = random_init_w(hidden_dims[i-1], hidden_dims[i])
+                self.params[f'b{i+1}'] = np.zeros(hidden_dims[i])
             out_shape = self.params[f'W{i+1}'].shape[-1]
             self.params[f'gamma{i+1}'] = np.ones(out_shape)
             self.params[f'beta{i+1}'] = np.zeros(out_shape)
+
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -330,12 +329,12 @@ class FullyConnectedNet(object):
         # layer, etc.                                                              #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        inputs = {}
+        inputs = {-1: X}
         for i in range(self.num_layers):
             g, b = self.params[f'gamma{i+1}'], self.params[f'beta{i+1}']
             forward_func = affine_forward if i == self.num_layers else affine_relu_forward
             W, b = self.params[f'W{i+1}'], self.params[f'b{i+1}']
-            inputs[i], self.cache[i] = forward_func(X, W, b)
+            inputs[i], self.cache[i] = forward_func(inputs[i-1], W, b)
             # if self.use_dropout:
             #     X, do_cache = dropout_forward(X, self.dropout_param)
             #     dropout_cache[i] = do_cache
