@@ -2,8 +2,8 @@ from builtins import range
 from builtins import object
 import numpy as np
 
-from cs231n.layers import *
-from cs231n.layer_utils import *
+from layers import *
+from layer_utils import *
 
 
 class TwoLayerNetOrig(object):
@@ -264,11 +264,10 @@ class FullyConnectedNet(object):
             self.params[f'W{i+1}'] = random_init_w(hidden_dims[i-1], hidden_dims[i])
             self.params[f'b{i+1}'] = np.zeros(hidden_dims[i])
 
-        if self.use_batchnorm:
-            for i in range(self.num_layers):
-                out_shape = self.params[f'W{i+1}'].shape[-1]
-                self.params[f'gamma{i+1}'] = np.ones(out_shape)
-                self.params[f'beta{i+1}'] = np.zeros(out_shape)
+        for i in range(self.num_layers): ### Make these even if dont need
+            out_shape = self.params[f'W{i+1}'].shape[-1]
+            self.params[f'gamma{i+1}'] = np.ones(out_shape)
+            self.params[f'beta{i+1}'] = np.zeros(out_shape)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -330,19 +329,20 @@ class FullyConnectedNet(object):
         # layer, etc.                                                              #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        inputs = {}
         for i in range(self.num_layers):
+            g, b = self.params[f'gamma{i+1}'], self.params[f'beta{i+1}']
             forward_func = affine_forward if i == self.num_layers else affine_relu_forward
-            X, cache = forward_func(X, self.params[f'W{i+1}'], self.params[f'b{i+1}'])
-            if self.use_dropout:
-                X, do_cache = dropout_forward(X, self.dropout_param)
-                dropout_cache[i] = do_cache
-            if self.use_batchnorm and layer <= len(self.bn_params):
-                g, b = self.params[f'gamma{i+1}'], self.params[f'beta{i+1}']
-                X, bcache = batchnorm_forward(X, g, b, self.bn_params[i])
-                bn_cache[i] = bcache
+            W, b = self.params[f'W{i+1}'], self.params[f'b{i+1}']
+            inputs[i], self.cache[i] = forward_func(X, W, b)
+            # if self.use_dropout:
+            #     X, do_cache = dropout_forward(X, self.dropout_param)
+            #     dropout_cache[i] = do_cache
+            # if self.use_batchnorm and i <= len(self.bn_params):
+            #     X, bcache = batchnorm_forward(X, g, b, self.bn_params[i])
+            #     bn_cache[i] = bcache
             #cache_dict[layer] = cache
-        scores = X
+        scores = inputs[i]
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -377,17 +377,10 @@ class FullyConnectedNet(object):
         grads = {}
         dx = dout
         for i, layer in enumerate(reversed(range(self.num_layers))):
-            if layer == self.num_layers - 1:
-                backward_func = affine_backward
-            else:
-                backward_func = affine_relu_backward
-            if self.use_batchnorm and layer in bn_cache:
-                dx, dgamma, dbeta = batchnorm_backward(dx, bn_cache[layer])
-                grads['gamma{}'.format(layer)] = dgamma
-                grads['beta{}'.format(layer)] = dbeta
-            if self.use_dropout and layer in dropout_cache:
-                dx = dropout_backward(dx, dropout_cache[layer])
-            dx, dw, db = backward_func(dx, cache_dict[layer])
+            backward_func = affine_backward if layer == self.num_layers - 1 else affine_relu_backward
+            # if self.use_dropout and layer in dropout_cache:
+            #     dx = dropout_backward(dx, dropout_cache[layer])
+            dx, dw, db = backward_func(dx, self.cache[layer])
             grads['W{}'.format(layer)] = dw + self.reg * self.params['W{}'.format(layer)]
             grads['b{}'.format(layer)] = db
 
