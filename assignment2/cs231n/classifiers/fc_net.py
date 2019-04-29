@@ -264,9 +264,9 @@ class FullyConnectedNet(object):
             if f'W{i+1}' not in self.params:
                 self.params[f'W{i+1}'] = random_init_w(hidden_dims[i-1], hidden_dims[i])
                 self.params[f'b{i+1}'] = np.zeros(hidden_dims[i])
-            out_shape = self.params[f'W{i+1}'].shape[-1]
-            self.params[f'gamma{i+1}'] = np.ones(out_shape)
-            self.params[f'beta{i+1}'] = np.zeros(out_shape)
+            # out_shape = self.params[f'W{i+1}'].shape[-1]
+            # self.params[f'gamma{i+1}'] = np.ones(out_shape)
+            # self.params[f'beta{i+1}'] = np.zeros(out_shape)
 
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -331,7 +331,7 @@ class FullyConnectedNet(object):
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         inputs = {-1: X}
         for i in range(self.num_layers):
-            g, b = self.params[f'gamma{i+1}'], self.params[f'beta{i+1}']
+            # g, b = self.params[f'gamma{i+1}'], self.params[f'beta{i+1}']
             forward_func = affine_forward if i == self.num_layers else affine_relu_forward
             W, b = self.params[f'W{i+1}'], self.params[f'b{i+1}']
             inputs[i], self.cache[i] = forward_func(inputs[i-1], W, b)
@@ -373,10 +373,12 @@ class FullyConnectedNet(object):
         dx = dout
         for layer in reversed(range(self.num_layers)):
             wk, bk = f'W{layer+1}', f'b{layer+1}'
+            #gk,betak = f'gamma{layer+1}', f'beta{layer+1}'
             backward_func = affine_backward if layer == self.num_layers else affine_relu_backward
             dx, dw, db = backward_func(dx, self.cache[layer])
             grads[wk] = dw + self.reg * self.params[wk]
-            grads[bk] = db
+            # grads[bk] = db
+            # grads[gk], grads[betak] =
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
