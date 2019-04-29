@@ -233,14 +233,9 @@ def batchnorm_backward(dout, cache):
 
 
 def bn_smart(dout, cache):
-    x, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps =  cache
+    x, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
     dbeta = dout.sum(axis=0)
     dgamma = (xhat * dout).sum(axis=0)
-
-
-    dsig_dmu = ((x - batch_mn) * -2).mean(axis=0)
-    dx_dsig = -.5 * ((x - batch_mn) * np.pow(batch_var + eps, -1.5)).sum(axis=0)
-
     N, D = dout.shape
     dxhat = dout * gamma
     inv_var = 1 / (np.sqrt(batch_var + eps))
