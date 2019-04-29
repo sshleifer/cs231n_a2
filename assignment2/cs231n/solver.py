@@ -7,6 +7,7 @@ import os
 import pickle as pickle
 
 import numpy as np
+import pandas as pd
 
 from cs231n import optim
 
@@ -159,13 +160,15 @@ class Solver(object):
         self.loss_history = []
         self.train_acc_history = []
         self.val_acc_history = []
+        self.grad_history = []
 
         # Make a deep copy of the optim_config for each parameter
         self.optim_configs = {}
         for p in self.model.params:
             d = {k: v for k, v in self.optim_config.items()}
             self.optim_configs[p] = d
-
+    @property
+    def grad_hist(self): return pd.DataFrame(self.grad_history)
 
     def _step(self):
         """
