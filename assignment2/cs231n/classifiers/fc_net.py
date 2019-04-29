@@ -300,6 +300,15 @@ class FullyConnectedNet(object):
             self.params[k] = v.astype(dtype)
 
 
+    @property
+    def _funcs_to_use(self):
+        funcs = []
+        for i in range(self.num_layers):
+            # g, b = self.params[f'gamma{i+1}'], self.params[f'beta{i+1}']
+            if (i == self.num_layers): funcs[i] = (affine_forward,affine_backward)
+            else: funcs[i] = (affine_relu_forward, affine_relu_backward)
+        return funcs
+
     def loss(self, X, y=None):
         """
         Compute loss and gradient for the fully-connected net.
@@ -330,9 +339,12 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         inputs = {-1: X}
+        funcs = {}
+        self.cache = {}
+        funcs = self._funcs_to_use
         for i in range(self.num_layers):
             # g, b = self.params[f'gamma{i+1}'], self.params[f'beta{i+1}']
-            forward_func = affine_forward if i == self.num_layers else affine_relu_forward
+            forward_func = funcs[i][0]
             W, b = self.params[f'W{i+1}'], self.params[f'b{i+1}']
             inputs[i], self.cache[i] = forward_func(inputs[i-1], W, b)
             # if self.use_dropout:
@@ -372,9 +384,9 @@ class FullyConnectedNet(object):
         grads = {}
         dx = dout
         for layer in reversed(range(self.num_layers)):
+            backward_func = funcs[i][1]
             wk, bk = f'W{layer+1}', f'b{layer+1}'
             #gk,betak = f'gamma{layer+1}', f'beta{layer+1}'
-            backward_func = affine_backward if layer == self.num_layers else affine_relu_backward
             dx, dw, db = backward_func(dx, self.cache[layer])
             grads[wk] = dw + self.reg * self.params[wk]
             grads[bk] = db
