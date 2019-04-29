@@ -345,15 +345,10 @@ class FullyConnectedNet(object):
         scores = inputs[i]
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        ############################################################################
-        #                             END OF YOUR CODE                             #
-        ############################################################################
-
         # If test mode return early
         if mode == 'test':
             return scores
 
-        loss, grads = 0.0, {}
         ############################################################################
         # TODO: Implement the backward pass for the fully-connected net. Store the #
         # loss in the loss variable and gradients in the grads dictionary. Compute #
@@ -378,7 +373,7 @@ class FullyConnectedNet(object):
         dx = dout
         for layer in reversed(range(self.num_layers)):
             wk, bk = f'W{layer+1}', f'b{layer+1}'
-            backward_func = affine_backward if layer == self.num_layers - 1 else affine_relu_backward
+            backward_func = affine_backward if layer == self.num_layers else affine_relu_backward
             dx, dw, db = backward_func(dx, self.cache[layer])
             grads[wk] = dw + self.reg * self.params[wk]
             grads[bk] = db
