@@ -377,7 +377,7 @@ class FullyConnectedNet(object):
             backward_func = affine_backward if layer == self.num_layers else affine_relu_backward
             dx, dw, db = backward_func(dx, self.cache[layer])
             grads[wk] = dw + self.reg * self.params[wk]
-            # grads[bk] = db
+            grads[bk] = db
             # grads[gk], grads[betak] =
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
