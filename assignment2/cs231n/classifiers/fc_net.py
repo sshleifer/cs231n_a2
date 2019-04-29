@@ -331,22 +331,16 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        for i, layer in enumerate(range(self.num_layers)):
-            if layer == self.num_layers - 1:
-                forward_func = affine_forward
-            else:
-                forward_func = affine_relu_forward
-            X, cache = forward_func(X,
-                                    self.params['W{}'.format(i)],
-                                    self.params['b{}'.format(i)])
+        for i in range(self.num_layers):
+            forward_func = affine_forward if i == self.num_layers else affine_relu_forward
+            X, cache = forward_func(X, self.params[f'W{i+1}'], self.params[f'b{i+1}'])
             if self.use_dropout:
                 X, do_cache = dropout_forward(X, self.dropout_param)
-                dropout_cache[layer] = do_cache
+                dropout_cache[i] = do_cache
             if self.use_batchnorm and layer <= len(self.bn_params):
-                g, b = (self.params['gamma{}'.format(layer)], self.params['beta{}'.format(layer)])
-
-                X, bcache = batchnorm_forward(X, g, b, self.bn_params[layer])
-                bn_cache[layer] = bcache
+                g, b = self.params[f'gamma{i+1}'], self.params[f'beta{i+1}']
+                X, bcache = batchnorm_forward(X, g, b, self.bn_params[i])
+                bn_cache[i] = bcache
             #cache_dict[layer] = cache
         scores = X
 
