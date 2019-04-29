@@ -198,7 +198,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     elif mode == 'test':
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         out = ((x - bn_param['running_mean']) / (np.sqrt(bn_param['running_var']) + eps)) * gamma + beta
-        cache = (,)
+        cache = ()
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)****
     else:
         raise ValueError('Invalid forward batchnorm mode "%s"' % mode)
