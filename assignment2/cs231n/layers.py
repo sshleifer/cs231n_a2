@@ -193,7 +193,34 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        running_mean = momentum * running_mean + (1 - momentum) * x.mean(axis=0)
+        running_var = momentum * running_var + (1 - momentum) * x.std(axis=0)
+        N = float(N)
+        # Step 1 - shape of mu (D,)
+        # np.product(N, np.sum(x, axis=0))
+        mu = 1 / N * np.sum(x, axis=0)
+        # Step 2 - shape of var (N,D)
+        xmu = x - mu
+        # Step 3 - shape of carre (N,D)
+        carre = xmu ** 2
+        # Step 4 - shape of var (D,)
+        var = 1 / N * np.sum(carre, axis=0)
+        # Step 5 - Shape sqrtvar (D,)
+        sqrtvar = np.sqrt(var + eps)
+        # Step 6 - Shape invvar (D,)
+        invvar = 1. / sqrtvar
+        # Step 7 - Shape va2 (N,D)
+        va2 = xmu * invvar
+        # Step 8 - Shape va3 (N,D)
+        va3 = gamma * va2
+        # Step 9 - Shape out (N,D)
+        out = va3 + beta
+
+        running_mean = momentum * running_mean + (1.0 - momentum) * mu
+        running_var = momentum * running_var + (1.0 - momentum) * var
+
+        cache = (mu, xmu, carre, var, sqrtvar, invvar,
+                 va2, va3, gamma, beta, x, bn_param)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
@@ -207,8 +234,8 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # Store the result in the out variable.                               #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        out = ((x - running_mean) / (running_var + eps)) * gamma + beta
+        cache = []  # (running_mean, running_var, gamma, beta, bn_param)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
@@ -266,9 +293,9 @@ def batchnorm_backward_alt(dout, cache):
 
     For this implementation you should work out the derivatives for the batch
     normalizaton backward pass on paper and simplify as much as possible. You
-    should be able to derive a simple expression for the backward pass. 
+    should be able to derive a simple expression for the backward pass.
     See the jupyter notebook for more hints.
-     
+
     Note: This implementation should expect to receive the same cache variable
     as batchnorm_backward, but might not use all of the values in the cache.
 
@@ -293,6 +320,17 @@ def batchnorm_backward_alt(dout, cache):
     ###########################################################################
 
     return dx, dgamma, dbeta
+
+def reshape_to_bn(X, N, C, H, W):
+    return np.swapaxes(X, 0, 1).reshape(C, -1).T
+
+
+def reshape_from_bn(out, N, C, H, W):
+    return np.swapaxes(out.T.reshape(C, N, H, W), 0, 1)
+
+
+
+
 
 
 def layernorm_forward(x, gamma, beta, ln_param):

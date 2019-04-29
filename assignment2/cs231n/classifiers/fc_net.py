@@ -251,13 +251,25 @@ class FullyConnectedNet(object):
         # parameters should be initialized to zeros.                               #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        def scaled_random_layer(in_dim, out_dim):
-            return np.random.randn(in_dim, out_dim) * weight_scale
-        self.params['W0'] = scaled_random_layer(input_dim, hidden_dims[0])
-        self.params['b0'] = np.zeros(hidden_dims[0])
+        def random_init_w(in_dim, out_dim): return np.random.randn(in_dim, out_dim) * weight_scale
+
+        self.params['W1'] = random_init_w(input_dim, hidden_dims[0])
+        self.params['b1'] = np.zeros(hidden_dims[0])
+
+        self.params[f'W{self.num_layers + 1}'] = random_init_w(hidden_dims[-1], num_classes)
+        self.params[f'b{self.num_layers+1}'] = np.zeros(num_classes)
+
+        for i in range(self.num_layers):
+            if i == 0: continue
+            lid = i+1
+            self.params[f'W{lid}'] = random_init_w(input_dim, hidden_dims[i])
+            self.params[f'b{lid}'] = np.zeros(hidden_dims[i])
+
         if self.use_batchnorm:
-            self.params['gamma0'] = np.ones(hidden_dims[0])
-            self.params['beta0'] = np.zeros(hidden_dims[0])
+            for i in range(self.num_layers):
+                out_shape = self.params[f'W{i+1}'].shape[-1]
+                self.params[f'gamma{i+1}'] = np.ones(out_shape)
+                self.params[f'beta{i+1}'] = np.zeros(out_shape)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -306,7 +318,6 @@ class FullyConnectedNet(object):
         if self.normalization=='batchnorm':
             for bn_param in self.bn_params:
                 bn_param['mode'] = mode
-        scores = None
         ############################################################################
         # TODO: Implement the forward pass for the fully-connected net, computing  #
         # the class scores for X and storing them in the scores variable.          #
@@ -337,7 +348,7 @@ class FullyConnectedNet(object):
 
                 X, bcache = batchnorm_forward(X, g, b, self.bn_params[layer])
                 bn_cache[layer] = bcache
-            cache_dict[layer] = cache
+            #cache_dict[layer] = cache
         scores = X
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
