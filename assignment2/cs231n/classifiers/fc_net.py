@@ -396,5 +396,5 @@ class FullyConnectedNet(object):
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
-
+        assert list(grads.keys()) == list(self.params.keys())
         return loss, grads
