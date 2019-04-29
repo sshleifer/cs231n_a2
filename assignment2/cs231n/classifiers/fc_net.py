@@ -231,6 +231,7 @@ class FullyConnectedNet(object):
           model.
         """
         self.normalization = normalization
+        self.use_batchnorm = self.normalization == 'batchnorm'
         self.use_dropout = dropout != 1
         self.reg = reg
         self.num_layers = 1 + len(hidden_dims)
@@ -250,8 +251,13 @@ class FullyConnectedNet(object):
         # parameters should be initialized to zeros.                               #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        def scaled_random_layer(in_dim, out_dim):
+            return np.random.randn(in_dim, out_dim) * weight_scale
+        self.params['W0'] = scaled_random_layer(input_dim, hidden_dims[0])
+        self.params['b0'] = np.zeros(hidden_dims[0])
+        if self.use_batchnorm:
+            self.params['gamma0'] = np.ones(hidden_dims[0])
+            self.params['beta0'] = np.zeros(hidden_dims[0])
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -272,7 +278,8 @@ class FullyConnectedNet(object):
         # normalization layer. You should pass self.bn_params[0] to the forward pass
         # of the first batch normalization layer, self.bn_params[1] to the forward
         # pass of the second batch normalization layer, etc.
-        self.bn_params = []
+
+
         if self.normalization=='batchnorm':
             self.bn_params = [{'mode': 'train'} for i in range(self.num_layers - 1)]
         if self.normalization=='layernorm':
@@ -291,7 +298,7 @@ class FullyConnectedNet(object):
         """
         X = X.astype(self.dtype)
         mode = 'test' if y is None else 'train'
-        self.use_batchnorm = self.normalization == 'batchnorm'
+
         # Set train/test mode for batchnorm params and dropout param since they
         # behave differently during training and testing.
         if self.use_dropout:
