@@ -180,7 +180,6 @@ class TwoLayerNet(object):
         if y is None:  # test mode
             return scores
         loss, dout = softmax_loss(scores, y)
-        grads = {}
         reg_losses = [np.sum(v * v) for k, v in self.params.items()
                       if k in ['W1', 'W2']]
         reg_loss = np.sum(reg_losses) * self.reg * .5
@@ -292,7 +291,7 @@ class FullyConnectedNet(object):
         """
         X = X.astype(self.dtype)
         mode = 'test' if y is None else 'train'
-        self.use_batchnorm = self.normalization == 'batchnorm':
+        self.use_batchnorm = self.normalization == 'batchnorm'
         # Set train/test mode for batchnorm params and dropout param since they
         # behave differently during training and testing.
         if self.use_dropout:
