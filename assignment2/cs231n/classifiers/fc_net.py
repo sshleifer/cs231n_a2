@@ -319,19 +319,19 @@ class FullyConnectedNet(object):
                 forward_func = affine_forward
             else:
                 forward_func = affine_relu_forward
-            x, cache = forward_func(x,
+            X, cache = forward_func(X,
                                     self.params['W{}'.format(i)],
                                     self.params['b{}'.format(i)])
             if self.use_dropout:
-                x, do_cache = dropout_forward(x, self.dropout_param)
+                X, do_cache = dropout_forward(X, self.dropout_param)
                 dropout_cache[layer] = do_cache
             if self.use_batchnorm and layer <= len(self.bn_params):
                 g, b = (self.params['gamma{}'.format(layer)], self.params['beta{}'.format(layer)])
 
-                x, bcache = batchnorm_forward(x, g, b, self.bn_params[layer])
+                X, bcache = batchnorm_forward(X, g, b, self.bn_params[layer])
                 bn_cache[layer] = bcache
             cache_dict[layer] = cache
-        scores = x
+        scores = X
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
