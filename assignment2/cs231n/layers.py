@@ -239,11 +239,34 @@ def bn_smart(dout, cache):
     N, D = dout.shape
     dxhat = dout * gamma
     inv_var = 1 / (np.sqrt(batch_var + eps))
-    # final partial derivatives
     dx = (1. / N) * inv_var * (N * dxhat - np.sum(dxhat, axis=0)
                                - xhat * (dxhat * xhat).sum(axis=0))
     return dx, dgamma, dbeta
 
+
+def batchnorm_backward_vold(dout, cache):
+  (x, batch_norm_x, batch_mean, batch_var, gamma, beta, bn_param) = cache
+  N, D = x.shape
+  eps = bn_param.get('eps', 1e-5)
+  dx, dgamma, dbeta = None, None, None
+
+  #############################################################################
+  # TODO: Implement the backward pass for batch normalization. Store the      #
+  # results in the dx, dgamma, and dbeta variables.                           #
+  #############################################################################
+
+  dxhat = dout * gamma
+  dvar = np.sum(dxhat, axis=0) * (x - batch_mean) * (-0.5 * np.power(batch_var + eps, -1.5))
+  dxm1 = dxhat / (batch_var + eps)
+  dxm2 = np.ones((N,D)) * dvar / N * (2 * (x - batch_mean))
+  dmu = -1 * np.sum(dxm1 + dxm2, axis=0)
+  dx1 = dxm1 + dxm2
+  dx2 = np.ones((N,D)) * dmu / N
+
+  dx = dx1 + dx2
+  dgamma = np.sum(np.multiply(dout, batch_norm_x), axis=0)
+  dbeta = np.sum(dout, axis=0)
+  return dx, dgamma, dbeta
 
 def bn_stupid(dout, cache):
     N, D  = dout.shape
