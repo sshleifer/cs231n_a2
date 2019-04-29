@@ -376,13 +376,12 @@ class FullyConnectedNet(object):
         loss += reg_loss
         grads = {}
         dx = dout
-        for i, layer in enumerate(reversed(range(self.num_layers))):
+        for layer in reversed(range(self.num_layers)):
+            wk, bk = f'W{layer+1}', f'b{layer+1}'
             backward_func = affine_backward if layer == self.num_layers - 1 else affine_relu_backward
-            # if self.use_dropout and layer in dropout_cache:
-            #     dx = dropout_backward(dx, dropout_cache[layer])
             dx, dw, db = backward_func(dx, self.cache[layer])
-            grads['W{}'.format(layer)] = dw + self.reg * self.params['W{}'.format(layer)]
-            grads['b{}'.format(layer)] = db
+            grads[wk] = dw + self.reg * self.params[wk]
+            grads[bk] = db
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
