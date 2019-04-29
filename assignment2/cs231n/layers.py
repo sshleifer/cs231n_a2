@@ -164,37 +164,15 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     bn_param['running_var'] = lin_combo(running_var, batch_var, momentum)
     # Store the updated running means back into bn_param
     if mode == 'train':
-        #######################################################################
-        # TODO: Implement the training-time forward pass for batch norm.      #
-        # Use minibatch statistics to compute the mean and variance, use      #
-        # these statistics to normalize the incoming data, and scale and      #
-        # shift the normalized data using gamma and beta.                     #
-        #                                                                     #
-        # You should store the output in the variable out. Any intermediates  #
-        # that you need for the backward pass should be stored in the cache   #
-        # variable.                                                           #
-        #                                                                     #
-        # You should also use your computed sample mean and variance together #
-        # with the momentum variable to update the running mean and running   #
-        # variance, storing your result in the running_mean and running_var   #
-        # variables.                                                          #
-        #                                                                     #
-        # Note that though you should be keeping track of the running         #
-        # variance, you should normalize the data based on the standard       #
-        # deviation (square root of variance) instead!                        # 
-        # Referencing the original paper (https://arxiv.org/abs/1502.03167)   #
-        # might prove to be helpful.                                          #
-        #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
         batch_norm_x = (x - batch_mn) / np.sqrt(batch_var + eps)
         out = gamma * batch_norm_x + beta
-        cache = (x, batch_norm_x, batch_mn, batch_var, gamma, beta, bn_param)
-
+        # dout w.r.t gamma = (batch_norm_x )
+        # dout w.r.t beta = ones
+        # dout w.r.t x = gamma * (dbatchnormx w.r.t x)
+        # (dbatchnormx w.r.t x) =
+        cache = (x, batch_norm_x, batch_mn, batch_var, gamma, beta, bn_param, eps)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        #######################################################################
-        #                           END OF YOUR CODE                          #
-        #######################################################################
     elif mode == 'test':
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         out = ((x - bn_param['running_mean']) / (np.sqrt(bn_param['running_var']) + eps)) * gamma + beta
@@ -232,16 +210,64 @@ def batchnorm_backward(dout, cache):
     # might prove to be helpful.                                              #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    N, D  = dout.shape
+    ones = np.ones((N, D))
+    x, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps =  cache
+    dbeta = dout.sum(axis=0)
+    dgamma = (xhat * dout).sum(axis=0)
+    xwhite = x - batch_mn
+    bve = batch_var + eps
+    dxhat = dout * gamma
 
-    pass
-
+    dxm1 = dxhat / bve
+    dvar = dxhat.sum(axis=0) * xwhite * (-0.5 * np.power(bve, -1.5))
+    dxm2 = ones * dvar / N * (2 * xwhite)
+    dx1 = dxm1 + dxm2
+    dmu = -dx1.sum(axis=0)
+    dx2 = ones * dmu / N
+    dx = dx1 + dx2
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ###########################################################################
-    #                             END OF YOUR CODE                            #
-    ###########################################################################
+
 
     return dx, dgamma, dbeta
 
+
+def bn_smart(dout, cache):
+    x, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps =  cache
+    dbeta = dout.sum(axis=0)
+    dgamma = (xhat * dout).sum(axis=0)
+
+
+    dsig_dmu = ((x - batch_mn) * -2).mean(axis=0)
+    dx_dsig = -.5 * ((x - batch_mn) * np.pow(batch_var + eps, -1.5)).sum(axis=0)
+
+    N, D = dout.shape
+    dxhat = dout * gamma
+    inv_var = 1 / (np.sqrt(batch_var + eps))
+    # final partial derivatives
+    dx = (1. / N) * inv_var * (N * dxhat - np.sum(dxhat, axis=0)
+                               - xhat * (dxhat * xhat).sum(axis=0))
+    return dx, dgamma, dbeta
+
+
+def bn_stupid(dout, cache):
+    N, D  = dout.shape
+    ones = np.ones((N, D))
+    x, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
+    dbeta = dout.sum(axis=0)
+    dgamma = (xhat * dout).sum(axis=0)
+    xwhite = x - batch_mn
+    bve = batch_var + eps
+    dxhat = dout * gamma
+
+    dxm1 = dxhat / bve
+    dvar = dxhat.sum(axis=0) * xwhite * (-0.5 * np.power(bve, -1.5))
+    dxm2 = ones * dvar / N * (2 * xwhite)
+    dx1 = dxm1 + dxm2
+    dmu = -dx1.sum(axis=0)
+    dx2 = ones * dmu / N
+    dx = dx1 + dx2
+    return dx, dgamma, dbeta
 
 def batchnorm_backward_alt(dout, cache):
     """
