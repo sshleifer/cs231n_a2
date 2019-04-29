@@ -324,16 +324,13 @@ def batchnorm_backward_alt(dout, cache):
 
     return dx, dgamma, dbeta
 
+
 def reshape_to_bn(X, N, C, H, W):
     return np.swapaxes(X, 0, 1).reshape(C, -1).T
 
 
 def reshape_from_bn(out, N, C, H, W):
     return np.swapaxes(out.T.reshape(C, N, H, W), 0, 1)
-
-
-
-
 
 
 def layernorm_forward(x, gamma, beta, ln_param):
@@ -726,7 +723,8 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     Computes the forward pass for spatial group normalization.
     In contrast to layer normalization, group normalization splits each entry 
     in the data into G contiguous pieces, which it then normalizes independently.
-    Per feature shifting and scaling are then applied to the data, in a manner identical to that of batch normalization and layer normalization.
+    Per feature shifting and scaling are then applied to the data, in a manner identical to that
+    of batch normalization and layer normalization.
 
     Inputs:
     - x: Input data of shape (N, C, H, W)
@@ -741,7 +739,7 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     - cache: Values needed for the backward pass
     """
     out, cache = None, None
-    eps = gn_param.get('eps',1e-5)
+    eps = gn_param.get('eps', 1e-5)
     ###########################################################################
     # TODO: Implement the forward pass for spatial group normalization.       #
     # This will be extremely similar to the layer norm implementation.        #
