@@ -1,6 +1,6 @@
 from builtins import range
 import numpy as np
-
+from cs231n.optim import lin_combo
 
 def affine_forward(x, w, b):
     """
@@ -107,18 +107,10 @@ def relu_backward(dout, cache):
     Returns:
     - dx: Gradient with respect to x
     """
-    dx, x = None, cache
-    ###########################################################################
-    # TODO: Implement the ReLU backward pass.                                 #
-    ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     dx = dout.copy()
-    dx[x < 0] = 0
-
+    dx[cache < 0] = 0
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ###########################################################################
-    #                             END OF YOUR CODE                            #
-    ###########################################################################
     return dx
 
 
@@ -167,8 +159,10 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     N, D = x.shape
     running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
     running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
-
-    out, cache = None, None
+    batch_mn, batch_var = x.mean(axis=0), x.var(axis=0)
+    bn_param['running_mean'] = lin_combo(running_mean, batch_mn, momentum)
+    bn_param['running_var'] = lin_combo(running_var, batch_var, momentum)
+    # Store the updated running means back into bn_param
     if mode == 'train':
         #######################################################################
         # TODO: Implement the training-time forward pass for batch norm.      #
@@ -193,60 +187,22 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        running_mean = momentum * running_mean + (1 - momentum) * x.mean(axis=0)
-        running_var = momentum * running_var + (1 - momentum) * x.std(axis=0)
-        N = float(N)
-        # Step 1 - shape of mu (D,)
-        # np.product(N, np.sum(x, axis=0))
-        mu = 1 / N * np.sum(x, axis=0)
-        # Step 2 - shape of var (N,D)
-        xmu = x - mu
-        # Step 3 - shape of carre (N,D)
-        carre = xmu ** 2
-        # Step 4 - shape of var (D,)
-        var = 1 / N * np.sum(carre, axis=0)
-        # Step 5 - Shape sqrtvar (D,)
-        sqrtvar = np.sqrt(var + eps)
-        # Step 6 - Shape invvar (D,)
-        invvar = 1. / sqrtvar
-        # Step 7 - Shape va2 (N,D)
-        va2 = xmu * invvar
-        # Step 8 - Shape va3 (N,D)
-        va3 = gamma * va2
-        # Step 9 - Shape out (N,D)
-        out = va3 + beta
-
-        running_mean = momentum * running_mean + (1.0 - momentum) * mu
-        running_var = momentum * running_var + (1.0 - momentum) * var
-
-        cache = (mu, xmu, carre, var, sqrtvar, invvar,
-                 va2, va3, gamma, beta, x, bn_param)
+        batch_norm_x = (x - batch_mn) / np.sqrt(batch_var + eps)
+        out = gamma * batch_norm_x + beta
+        cache = (x, batch_norm_x, batch_mn, batch_var, gamma, beta, bn_param)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
         #                           END OF YOUR CODE                          #
         #######################################################################
     elif mode == 'test':
-        #######################################################################
-        # TODO: Implement the test-time forward pass for batch normalization. #
-        # Use the running mean and variance to normalize the incoming data,   #
-        # then scale and shift the normalized data using gamma and beta.      #
-        # Store the result in the out variable.                               #
-        #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        out = ((x - running_mean) / (running_var + eps)) * gamma + beta
-        cache = []  # (running_mean, running_var, gamma, beta, bn_param)
-
-        # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        #######################################################################
-        #                          END OF YOUR CODE                           #
-        #######################################################################
+        out = ((x - bn_param['running_mean']) / (np.sqrt(bn_param['running_var']) + eps)) * gamma + beta
+        cache = (,)
+        # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)****
     else:
         raise ValueError('Invalid forward batchnorm mode "%s"' % mode)
 
-    # Store the updated running means back into bn_param
-    bn_param['running_mean'] = running_mean
-    bn_param['running_var'] = running_var
 
     return out, cache
 
