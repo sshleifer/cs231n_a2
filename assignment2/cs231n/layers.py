@@ -262,7 +262,6 @@ def batchnorm_backward_vold(dout, cache):
   dmu = -1 * np.sum(dxm1 + dxm2, axis=0)
   dx1 = dxm1 + dxm2
   dx2 = np.ones((N,D)) * dmu / N
-
   dx = dx1 + dx2
   dgamma = np.sum(np.multiply(dout, batch_norm_x), axis=0)
   dbeta = np.sum(dout, axis=0)
@@ -312,7 +311,7 @@ def batchnorm_backward_alt(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    dx, dgamma, dbeta =  bn_smart(dout, cache)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
