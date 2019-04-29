@@ -302,7 +302,7 @@ class FullyConnectedNet(object):
 
     @property
     def _funcs_to_use(self):
-        funcs = []
+        funcs = {}
         for i in range(self.num_layers):
             # g, b = self.params[f'gamma{i+1}'], self.params[f'beta{i+1}']
             if (i == self.num_layers): funcs[i] = (affine_forward,affine_backward)
@@ -339,7 +339,6 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         inputs = {-1: X}
-        funcs = {}
         self.cache = {}
         funcs = self._funcs_to_use
         for i in range(self.num_layers):
