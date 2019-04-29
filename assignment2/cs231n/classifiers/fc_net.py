@@ -260,10 +260,9 @@ class FullyConnectedNet(object):
         self.params[f'b{self.num_layers+1}'] = np.zeros(num_classes)
 
         for i in range(self.num_layers):
-            if i == 0: continue
-            lid = i+1
-            self.params[f'W{lid}'] = random_init_w(input_dim, hidden_dims[i])
-            self.params[f'b{lid}'] = np.zeros(hidden_dims[i])
+            if f'W{i+1}' in self.params: continue
+            self.params[f'W{i+1}'] = random_init_w(hidden_dims[i-1], hidden_dims[i])
+            self.params[f'b{i+1}'] = np.zeros(hidden_dims[i])
 
         if self.use_batchnorm:
             for i in range(self.num_layers):
