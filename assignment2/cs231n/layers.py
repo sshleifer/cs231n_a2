@@ -695,7 +695,7 @@ def spatial_batchnorm_backward(dout, cache):
     """
     dx, dgamma, dbeta = None, None, None
 
-    ###########################################################################
+     ###########################################################################
     # TODO: Implement the backward pass for spatial batch normalization.      #
     #                                                                         #
     # HINT: You can implement spatial batch normalization by calling the      #

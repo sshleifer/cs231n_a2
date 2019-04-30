@@ -4,6 +4,7 @@ import unittest
 from cs231n.layers import *
 from cs231n.gradient_check import eval_numerical_gradient_array, eval_numerical_gradient
 from cs231n.classifiers.fc_net import FullyConnectedNet
+from cs231n.classifiers.cnn import ThreeLayerConvNet
 from cs231n.solver import Solver
 import time
 
@@ -217,6 +218,7 @@ class TestDropout(unittest.TestCase):
         print('dgamma error: ', rel_error(da_num, dgamma))
         print('dbeta error: ', rel_error(db_num, dbeta))
 
+class TestConv(unittest.TestCase):
     def test_conv_forward_naive(self):
         x_shape = (2, 3, 4, 4)
         w_shape = (3, 3, 4, 4)
@@ -315,3 +317,49 @@ class TestDropout(unittest.TestCase):
         print('Testing max_pool_backward_naive function:')
         print('dx error: ', rel_error(dx, dx_num))
 
+
+    def test_three_layer_conv(self):
+
+        model = ThreeLayerConvNet()
+
+        N = 50
+        X = np.random.randn(N, 3, 32, 32)
+        y = np.random.randint(10, size=N)
+
+        loss, grads = model.loss(X, y)
+        self.assertAlmostEqual(loss, np.log(10))
+    def test_three_layer_grads(self):
+        num_inputs = 2
+        input_dim = (3, 16, 16)
+        reg = 0.0
+        num_classes = 10
+        np.random.seed(231)
+        X = np.random.randn(num_inputs, *input_dim)
+        y = np.random.randint(num_classes, size=num_inputs)
+
+        model = ThreeLayerConvNet(num_filters=3, filter_size=3,
+                                  input_dim=input_dim, hidden_dim=7,
+                                  dtype=np.float64)
+        loss, grads = model.loss(X, y)
+        # Errors should be small, but correct implementations may have
+        # relative errors up to the order of e-2
+        for param_name in sorted(grads):
+            f = lambda _: model.loss(X, y)[0]
+            param_grad_num = eval_numerical_gradient(f, model.params[param_name], verbose=False,
+                                                     h=1e-6)
+            e = rel_error(param_grad_num, grads[param_name])
+            self.assertGreaterEqual(1e-1, e)
+
+    def test_overfit(self):
+        small_data = read_pickle('small_data.pkl')
+        model = ThreeLayerConvNet(weight_scale=1e-2)
+
+        solver = Solver(model, small_data,
+                        num_epochs=15, batch_size=50,
+                        update_rule='adam',
+                        optim_config={
+                            'learning_rate': 1e-3,
+                        },
+                        verbose=True, print_every=1)
+        solver.train()
+        self.assertGreaterEqual(solver.train_acc_history[-1], .6)
