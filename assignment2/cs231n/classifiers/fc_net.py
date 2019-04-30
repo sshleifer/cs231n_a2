@@ -340,19 +340,23 @@ class FullyConnectedNet(object):
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         inputs = {-1: X}
         self.cache = {}
+        bn_cache = {}
         funcs = self._funcs_to_use
         for i in range(self.num_layers):
-            # g, b = self.params[f'gamma{i+1}'], self.params[f'beta{i+1}']
+
             forward_func = funcs[i][0]
             W, b = self.params[f'W{i+1}'], self.params[f'b{i+1}']
-            inputs[i], self.cache[i] = forward_func(inputs[i-1], W, b)
+            X = inputs[i-1]
+            X, self.cache[i] = forward_func(X, W, b)
             # if self.use_dropout:
             #     X, do_cache = dropout_forward(X, self.dropout_param)
             #     dropout_cache[i] = do_cache
-            # if self.use_batchnorm and i <= len(self.bn_params):
-            #     X, bcache = batchnorm_forward(X, g, b, self.bn_params[i])
-            #     bn_cache[i] = bcache
+            if self.use_batchnorm and i <= len(self.bn_params):
+                 g, b = self.params[f'gamma{i + 1}'], self.params[f'beta{i + 1}']
+                 X, bcache = batchnorm_forward(X, g, b, self.bn_params[i])
+                 bn_cache[i] = bcache
             #cache_dict[layer] = cache
+            inputs[i] = X
         scores = inputs[i]
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -383,12 +387,17 @@ class FullyConnectedNet(object):
         grads = {}
         dx = dout
         for layer in reversed(range(self.num_layers)):
+            if self.use_batchnorm and i <= len(self.bn_params):
+                gk,betak = f'gamma{layer+1}', f'beta{layer+1}'
+                dx, grads[gk], grads[betak] = batchnorm_backward_alt(dx, bn_cache[i])
+
             backward_func = funcs[i][1]
             wk, bk = f'W{layer+1}', f'b{layer+1}'
-            #gk,betak = f'gamma{layer+1}', f'beta{layer+1}'
+
             dx, dw, db = backward_func(dx, self.cache[layer])
             grads[wk] = dw + self.reg * self.params[wk]
             grads[bk] = db
+
             # grads[gk], grads[betak] =
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
