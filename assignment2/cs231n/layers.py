@@ -380,15 +380,15 @@ def dropout_forward(x, dropout_param):
     as the probability of dropping a neuron output.
     """
     p, mode = dropout_param['p'], dropout_param['mode']
-    if 'seed' in dropout_param:
-        np.random.seed(dropout_param['seed'])
+    if 'seed' in dropout_param: np.random.seed(dropout_param['seed'])
 
     mask = None
     out = None
 
     if mode == 'train':
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        mask = (np.random.rand(*x.shape) < p) / p
+        # mask = (np.random.rand(*x.shape) < p) / p
+        mask = np.random.binomial(1, 1 - p, size=x.shape)  * (1/(1-p))
         out = x * mask
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     elif mode == 'test':
@@ -398,6 +398,7 @@ def dropout_forward(x, dropout_param):
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     cache = (dropout_param, mask)
+
     out = out.astype(x.dtype, copy=False)
 
     return out, cache

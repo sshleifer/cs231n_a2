@@ -275,6 +275,9 @@ class FullyConnectedNet(object):
                 gk,betak = f'gamma{i+1}', f'beta{i+1}'
                 dx, grads[gk], grads[betak] = batchnorm_backward_alt(dx, bn_cache[i])
 
+            if self.use_dropout:
+                 dx = dropout_backward(dx, dropout_cache[i])
+
             backward_func = funcs[i][1]
             wk, bk = f'W{i+1}', f'b{i+1}'
 
