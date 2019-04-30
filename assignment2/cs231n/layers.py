@@ -483,25 +483,20 @@ def conv_forward_naive(x, w, b, conv_param):
     F, C, HH, WW = w.shape
     P, stride = conv_param['pad'], conv_param['stride']
     Hp = int(1 + (H + 2 * P - HH) / stride)
-    Wp= int(1 + (W + 2 * P - WW) / stride)
-    out =  np.zeros((N, F, Hp, Wp))
+    Wp = int(1 + (W + 2 * P - WW) / stride)
+    out = np.zeros((N, F, Hp, Wp))
     x_pad = np.pad(x, ((0, 0), (0, 0), (P, P), (P, P)), mode='constant')
-    E = enumerate
+    E, R = enumerate, range
     for n, img in E(x_pad):
-            for f, filter in E(w):
-                for hp in range(Hp):
-                    for wp in range(Wp):
-                        xstart = hp * stride
-                        ystart = wp * stride
-                        region = img[:, xstart: xstart+HH, ystart: ystart+WW]
-                        assert filter.shape ==region.shape
-                        out[n, f, hp, wp] = (filter * region).sum() + b[f]
-    #out = out + b
-
+        for f, filter in E(w):
+            for hp in R(Hp):
+                for wp in R(Wp):
+                    xstart = hp * stride
+                    ystart = wp * stride
+                    region = img[:, xstart: xstart + HH, ystart: ystart + WW]
+                    assert filter.shape == region.shape
+                    out[n, f, hp, wp] = (filter * region).sum() + b[f]
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ###########################################################################
-    #                             END OF YOUR CODE                            #
-    ###########################################################################
     cache = (x, w, b, conv_param)
     return out, cache
 
