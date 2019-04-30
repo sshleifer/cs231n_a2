@@ -51,7 +51,7 @@ class ThreeLayerConvNet(object):
         # IMPORTANT: For this assignment, you can assume that the padding          #
         # and stride of the first convolutional layer are chosen so that           #
         # **the width and height of the input are preserved**. Take a look at      #
-        # the start of the loss() function to see how that happens.                #                           
+        # the start of the loss() function to see how that happens.                #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         def random_init_w(*shape):
@@ -64,16 +64,10 @@ class ThreeLayerConvNet(object):
         self.params['b1'] = np.zeros(num_filters)
 
         out_height = (H + 2 * pad - filter_size) // stride + 1
-        out_width = (W + 2 * pad - filter_size) // stride + 1
         pool_param = {'pool_height': 2, 'pool_width': 2, 'stride': 2}
         ph, pw, stride = pool_param['pool_height'], pool_param['pool_width'], pool_param['stride']
         Hp = int(1 + (out_height - ph) / stride)
-        #Wp = int(1 + (out_width - pw) / stride)
         pool_out_shape = num_filters * Hp * Hp
-        print('Pool out shape ', pool_out_shape)
-        print(f'Hp:{Hp}, conv_out_height:{out_height}')
-        # 8192
-
         self.params['W2'] = random_init_w(pool_out_shape, hidden_dim)
         self.params['b2'] = np.zeros(hidden_dim)
         self.params['W3'] = random_init_w(hidden_dim, num_classes)
