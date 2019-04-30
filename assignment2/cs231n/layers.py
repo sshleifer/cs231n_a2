@@ -208,7 +208,7 @@ def batchnorm_backward(dout, cache):
     dxhat = dout * gamma
     divar = (dxhat * xmu).sum(axis=0)
 
-    dsqrtvar = -1. / (sqrtvar ** 2) * divar
+    dsqrtvar = -1. / bve * divar
     dvar = 0.5 / sqrtvar * dsqrtvar
     dxmu1 = dxhat / sqrtvar
     dxmu2 = dvar / N * 2 * xmu
