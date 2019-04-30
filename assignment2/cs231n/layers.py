@@ -668,7 +668,6 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     # Your implementation should be very short; ours is less than five lines. #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
     N, C, H, W = x.shape
     x2d = x.transpose([0, 2,3, 1]).reshape(N*H*W, C)
 
@@ -705,10 +704,6 @@ def spatial_batchnorm_backward(dout, cache):
     x2d = dout.transpose([0, 2, 3, 1]).reshape(N * H * W, C)
     dx, dgamma, dbeta = batchnorm_backward_alt(x2d, cache)
     dx = dx.reshape(N, H, W, C).transpose([0, 3, 1, 2])
-
-
-
-
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -727,9 +722,9 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
 
     Inputs:
     - x: Input data of shape (N, C, H, W)
-    - gamma: Scale parameter, of shape (C,)
-    - beta: Shift parameter, of shape (C,)
-    - G: Integer mumber of groups to split into, should be a divisor of C
+    - gamma: Scale parameter, of shape (1,C,1,1).
+    - beta: Shift parameter, of shape (1,C,1,1).
+    - G: Integer number of groups to split into, should be a divisor of C
     - gn_param: Dictionary with the following keys:
       - eps: Constant for numeric stability
 
@@ -737,7 +732,6 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     - out: Output data, of shape (N, C, H, W)
     - cache: Values needed for the backward pass
     """
-    out, cache = None, None
     eps = gn_param.get('eps', 1e-5)
     ###########################################################################
     # TODO: Implement the forward pass for spatial group normalization.       #
@@ -747,13 +741,23 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     # and layer normalization!                                                # 
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    N, C, H, W = x.shape
+    assert C % G == 0
+    grp_size = int(C / G)
+    #X = (x.reshape((N*grp_size, C, H*W)).T)
+    #X = x.transpose([1, 0, 2, 3]).reshape(C, G, -1).T
+    X = x.reshape(N*G, C//G*H*W).T
 
-    pass
+    batch_mn, batch_var = X.mean(axis=0), X.var(axis=0)
+    batch_norm_x = (X - batch_mn) / np.sqrt(batch_var + eps)
+    x_norm = batch_norm_x.T.reshape(*x.shape)
+    out = gamma * x_norm + beta
+    print(f'out_nat.shape: {out.shape}, X.shape:{X.shape} orig:{x.shape}, norm: {x_norm.shape}')
+    #(20, 2, 6)
+    # (6, 2, 20)
 
+    cache = (X - batch_mn, x_norm, batch_mn, batch_var, gamma, beta, gn_param, eps)
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ###########################################################################
-    #                             END OF YOUR CODE                            #
-    ###########################################################################
     return out, cache
 
 
@@ -771,19 +775,30 @@ def spatial_groupnorm_backward(dout, cache):
     - dbeta: Gradient with respect to shift parameter, of shape (C,)
     """
     dx, dgamma, dbeta = None, None, None
+    raise NotImplemented()
 
     ###########################################################################
     # TODO: Implement the backward pass for spatial group normalization.      #
     # This will be extremely similar to the layer norm implementation.        #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    xmu, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
+    dbeta = dout.sum(axis=0)
+    dgamma = (xhat * dout).sum(axis=0)
+    N, D = dout.shape
+    dxhat = (dout * gamma).T
 
-    pass
+    xhat = xhat.T
+    N, D = xhat.shape
+
+    inv_var = 1 / (np.sqrt(batch_var + eps))
+    dx = (1. / N) * inv_var * (N * dxhat - np.sum(dxhat, axis=0)
+                               - xhat * (dxhat * xhat).sum(axis=0))
+    dx = dx.T
+
+    dx = dx.reshape(N, H, W, C).transpose([0, 3, 1, 2])
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ###########################################################################
-    #                             END OF YOUR CODE                            #
-    ###########################################################################
     return dx, dgamma, dbeta
 
 

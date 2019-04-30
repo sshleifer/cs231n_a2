@@ -9,20 +9,22 @@ from cs231n.classifiers.cnn import ThreeLayerConvNet
 from cs231n.solver import Solver
 import time
 
-
 IS_MAC = os.path.exists('/Users/shleifer/')
 
-
 import pickle
+
+
 def read_pickle(path):
     """pickle.load(path)"""
     with open(path, 'rb') as f:
         return pickle.load(f)
 
-def print_mean_std(x,axis=0):
+
+def print_mean_std(x, axis=0):
     print('  means: ', x.mean(axis=axis))
     print('  stds:  ', x.std(axis=axis))
     print()
+
 
 class TestBN(unittest.TestCase):
     def test_batchnorm(self):
@@ -49,7 +51,7 @@ class TestBN(unittest.TestCase):
         print('dx error: ', rel_error(dx_num, dx))
         print('dgamma error: ', rel_error(da_num, dgamma))
         print('dbeta error: ', rel_error(db_num, dbeta))
-        self.assertGreater(1e-8, rel_error(dx_num, dx),)
+        self.assertGreater(1e-8, rel_error(dx_num, dx), )
 
     def test_bn_alt(self):
         np.random.seed(231)
@@ -67,7 +69,6 @@ class TestBN(unittest.TestCase):
         t2 = time.time()
         dx2, dgamma2, dbeta2 = batchnorm_backward_alt(dout, cache)
         t3 = time.time()
-
 
         print('dx difference: ', rel_error(dx1, dx2))
         print('dgamma difference: ', rel_error(dgamma1, dgamma2))
@@ -107,6 +108,7 @@ class TestBN(unittest.TestCase):
                         verbose=True, print_every=20)
         solver.train()
 
+
 class TestDropout(unittest.TestCase):
     def test_dropout_fwd(self):
         np.random.seed(231)
@@ -115,7 +117,7 @@ class TestDropout(unittest.TestCase):
         for p in [0.25, 0.4, 0.7]:
             out, _ = dropout_forward(x, {'mode': 'train', 'p': p})
             out_test, _ = dropout_forward(x, {'mode': 'test', 'p': p})
-            self.assertAlmostEqual(out.mean(),  out_test.mean(), 1)
+            self.assertAlmostEqual(out.mean(), out_test.mean(), 1)
             # self.assertAlmostEqual((out == 0).mean(), (out_test == 0).mean(), 1)
             print('Running tests with p = ', p)
             print('Mean of input: ', x.mean())
@@ -147,7 +149,7 @@ class TestDropout(unittest.TestCase):
         X = np.random.randn(N, D)
         y = np.random.randint(C, size=(N,))
 
-        for dropout in [ 0.5, .75, 1.]:
+        for dropout in [0.5, .75, 1.]:
             print('Running check with dropout = ', dropout)
             model = FullyConnectedNet([H1, H2], input_dim=D, num_classes=C,
                                       weight_scale=5e-2, dtype=np.float64,
@@ -191,6 +193,7 @@ class TestDropout(unittest.TestCase):
         print('After layer normalization (gamma=', gamma, ', beta=', beta, ')')
         a_norm, _ = layernorm_forward(a, gamma, beta, {'mode': 'train'})
         print_mean_std(a_norm, axis=1)
+        self.assertEqual(a.shape, a_norm.shape)
 
     def test_layernorm_backward(self):
         np.random.seed(231)
@@ -220,6 +223,7 @@ class TestDropout(unittest.TestCase):
         print('dx error: ', rel_error(dx_num, dx))
         print('dgamma error: ', rel_error(da_num, dgamma))
         print('dbeta error: ', rel_error(db_num, dbeta))
+
 
 class TestConv(unittest.TestCase):
     def test_conv_forward_naive(self):
@@ -299,7 +303,7 @@ class TestConv(unittest.TestCase):
                                   [0.38526316, 0.4]]]])
 
         # Compare your output with ours. Difference should be on the order of e-8.
-        self.assertGreaterEqual(1e-7,  rel_error(out, correct_out))
+        self.assertGreaterEqual(1e-7, rel_error(out, correct_out))
         print('Testing max_pool_forward_naive function:')
         print('difference: ', rel_error(out, correct_out))
 
@@ -320,9 +324,7 @@ class TestConv(unittest.TestCase):
         print('Testing max_pool_backward_naive function:')
         print('dx error: ', rel_error(dx, dx_num))
 
-
     def test_three_layer_conv(self):
-
         model = ThreeLayerConvNet()
 
         N = 50
@@ -331,6 +333,7 @@ class TestConv(unittest.TestCase):
 
         loss, grads = model.loss(X, y)
         self.assertAlmostEqual(loss, np.log(10), 3)
+
     def test_three_layer_grads(self):
         num_inputs = 2
         input_dim = (3, 16, 16)
@@ -367,7 +370,6 @@ class TestConv(unittest.TestCase):
         solver.train()
         self.assertGreaterEqual(solver.train_acc_history[-1], .6)
 
-
     def test_spatial_batchnorm_fwd(self):
         np.random.seed(231)
         # Check the training-time forward pass by checking means and variances
@@ -398,10 +400,9 @@ class TestConv(unittest.TestCase):
         mns = out.mean(axis=(0, 2, 3))
         print('  Means close to [6,7,8]', out.mean(axis=(0, 2, 3)))
         print('  Stds close to [3,4,5] ', out.std(axis=(0, 2, 3)))
+        self.assertEqual(x.shape, out.shape)
         self.assertTrue((np.round(mns, 1) == beta).all())
-        self.assertTrue((np.round(out.std(axis=(0, 2, 3)), 1)==gamma).all())
-
-
+        self.assertTrue((np.round(out.std(axis=(0, 2, 3)), 1) == gamma).all())
 
     def test_spatial_batchnorm_bwd(self):
         np.random.seed(231)
@@ -428,3 +429,88 @@ class TestConv(unittest.TestCase):
         self.assertGreaterEqual(ACCEPTABLE, rel_error(da_num, dgamma))
         self.assertGreaterEqual(ACCEPTABLE, rel_error(db_num, dbeta))
 
+    def test_spatial_groupnorm_fwd(self):
+        np.random.seed(231)
+        # Check the training-time forward pass by checking means and variances
+        # of features both before and after spatial batch normalization
+
+        N, C, H, W = 2, 6, 4, 5
+        G = 2
+        x = 4 * np.random.randn(N, C, H, W) + 10
+        x_g = x.reshape((N * G, -1))
+        print('Before spatial group normalization:')
+        print('  Shape: ', x.shape)
+        print('  Means: ', x_g.mean(axis=1))
+        print('  Stds: ', x_g.std(axis=1))
+
+        # Means should be close to zero and stds close to one
+        gamma, beta = np.ones((1, C, 1, 1)), np.zeros((1, C, 1, 1))
+        gn_param = {'mode': 'train'}
+
+        out, _ = spatial_groupnorm_forward(x, gamma, beta, G, gn_param)
+        out_g = out.reshape((N * G, -1))
+        print('After spatial group normalization:')
+
+        print('  Shape: ', out.shape)
+
+        print('  Means: ', out_g.mean(axis=1))
+        print('  Stds: ', out_g.std(axis=1))
+        self.assertEqual(x.shape, out.shape)
+        np.testing.assert_allclose(out_g.mean(axis=1),  0, atol=1e-4)
+        np.testing.assert_allclose(out_g.std(axis=1), 1, atol=1e-4)
+
+    def test_spatial_groupnorm_fwd_v2(self):
+        np.random.seed(231)
+        # Check the training-time forward pass by checking means and variances
+        # of features both before and after spatial batch normalization
+
+        N, C, H, W = 2, 12, 4, 5
+        G = 3
+        x = 4 * np.random.randn(N, C, H, W) + 10
+        x_g = x.reshape((N * G, -1))
+        print('Before spatial group normalization:')
+        print('  Shape: ', x.shape)
+        print('  Means: ', x_g.mean(axis=1))
+        print('  Stds: ', x_g.std(axis=1))
+
+        # Means should be close to zero and stds close to one
+        gamma, beta = np.ones((1, C, 1, 1)), np.zeros((1, C, 1, 1))
+        gn_param = {'mode': 'train'}
+
+        out, _ = spatial_groupnorm_forward(x, gamma, beta, G, gn_param)
+        out_g = out.reshape((N * G, -1))
+        print('After spatial group normalization:')
+
+        print('  Shape: ', out.shape)
+
+        print('  Means: ', out_g.mean(axis=1))
+        print('  Stds: ', out_g.std(axis=1))
+        self.assertEqual(x.shape, out.shape)
+        np.testing.assert_allclose(out_g.mean(axis=1), 0, atol=1e-4)
+        np.testing.assert_allclose(out_g.std(axis=1), 1, atol=1e-4)
+
+    def test_spatial_groupnorm_bwd(self):
+        np.random.seed(231)
+        N, C, H, W = 2, 6, 4, 5
+        G = 2
+        x = 5 * np.random.randn(N, C, H, W) + 12
+        gamma = np.random.randn(1, C, 1, 1)
+        beta = np.random.randn(1, C, 1, 1)
+        dout = np.random.randn(N, C, H, W)
+
+        gn_param = {}
+        fx = lambda x: spatial_groupnorm_forward(x, gamma, beta, G, gn_param)[0]
+        fg = lambda a: spatial_groupnorm_forward(x, gamma, beta, G, gn_param)[0]
+        fb = lambda b: spatial_groupnorm_forward(x, gamma, beta, G, gn_param)[0]
+
+        dx_num = eval_numerical_gradient_array(fx, x, dout)
+        da_num = eval_numerical_gradient_array(fg, gamma, dout)
+        db_num = eval_numerical_gradient_array(fb, beta, dout)
+
+        _, cache = spatial_groupnorm_forward(x, gamma, beta, G, gn_param)
+        dx, dgamma, dbeta = spatial_groupnorm_backward(dout, cache)
+
+        ACCEPTABLE = 1e-7
+        self.assertGreaterEqual(ACCEPTABLE, rel_error(dx_num, dx))
+        self.assertGreaterEqual(ACCEPTABLE, rel_error(da_num, dgamma))
+        self.assertGreaterEqual(ACCEPTABLE, rel_error(db_num, dbeta))
