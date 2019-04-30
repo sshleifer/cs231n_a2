@@ -308,8 +308,16 @@ def layernorm_forward(x, gamma, beta, ln_param):
     # the batch norm code and leave it almost unchanged?                      #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    X = x.T
+    batch_mn, batch_var = X.mean(axis=0), X.var(axis=0)
+    batch_norm_x = (X - batch_mn) / np.sqrt(batch_var + eps)
 
-    pass
+    out = gamma * batch_norm_x.T + beta
+    cache = (X - batch_mn, batch_norm_x.T, batch_mn, batch_var, gamma, beta, ln_param, eps)
+
+    # out, cache =  batchnorm_forward(x.T, gamma, beta,ln_param)
+    # cache[1] = cache[1].T
+    # out = out.T
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -344,12 +352,24 @@ def layernorm_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    xmu, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
+    dbeta = dout.sum(axis=0)
+    dgamma = (xhat * dout).sum(axis=0)
+    N, D = dout.shape
+    dxhat = (dout * gamma).T
 
+    xhat = xhat.T
+    N, D = xhat.shape
+
+    inv_var = 1 / (np.sqrt(batch_var + eps))
+    dx = (1. / N) * inv_var * (N * dxhat - np.sum(dxhat, axis=0)
+                               - xhat * (dxhat * xhat).sum(axis=0))
+    dx = dx.T
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
+
     return dx, dgamma, dbeta
 
 
