@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import unittest
 
 from cs231n.layers import *
@@ -7,6 +8,9 @@ from cs231n.classifiers.fc_net import FullyConnectedNet
 from cs231n.classifiers.cnn import ThreeLayerConvNet
 from cs231n.solver import Solver
 import time
+
+
+IS_MAC = os.path.exists('/Users/shleifer/')
 
 
 import pickle
