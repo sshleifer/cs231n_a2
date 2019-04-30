@@ -158,7 +158,8 @@ class FullyConnectedNet(object):
                 self.params[f'W{i+1}'] = random_init_w(dims[i], dims[i+1])
                 self.params[f'b{i+1}'] = np.zeros(dims[i+1])
 
-            if self.use_batchnorm and i < self.num_layers:
+            if self.use_batchnorm and (i+1) < self.num_layers:
+                print(f'Adding bn for {i}')
                 out_shape = self.params[f'W{i + 1}'].shape[-1]
                 self.params[f'gamma{i+1}'] = np.ones(out_shape)
                 self.params[f'beta{i+1}'] = np.zeros(out_shape)
