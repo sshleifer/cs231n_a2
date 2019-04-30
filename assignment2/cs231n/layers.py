@@ -787,7 +787,7 @@ def spatial_groupnorm_backward(dout, cache):
 
     inv_var = 1 / (np.sqrt(batch_var + eps))
     dx = (1. / N) * inv_var * (N * dxhat - dxhat.sum(axis=0) - xhat * (dxhat * xhat).sum(axis=0))
-    print(f'dx: ')
+    print(f'dx:{dx.shape}')
     dx = dx.T.reshape(*dout.shape)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
