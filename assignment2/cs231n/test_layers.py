@@ -359,7 +359,6 @@ class TestConv(unittest.TestCase):
     def test_overfit(self):
         small_data = read_pickle('small_data.pkl')
         model = ThreeLayerConvNet(weight_scale=1e-2)
-
         solver = Solver(model, small_data,
                         num_epochs=15, batch_size=50,
                         update_rule='adam',

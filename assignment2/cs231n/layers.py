@@ -768,8 +768,6 @@ def spatial_groupnorm_backward(dout, cache):
     - dgamma: Gradient with respect to scale parameter, of shape (C,)
     - dbeta: Gradient with respect to shift parameter, of shape (C,)
     """
-    dx, dgamma, dbeta = None, None, None
-
     ###########################################################################
     # TODO: Implement the backward pass for spatial group normalization.      #
     # This will be extremely similar to the layer norm implementation.        #
@@ -777,19 +775,17 @@ def spatial_groupnorm_backward(dout, cache):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     xmu, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps, reshape_fn = cache
     not_c_axes = (0, 2, 3)
-    N, C, H, W = dout.shape
-    dbeta = dout.sum(axis=not_c_axes).reshape(1, C, 1, 1)
-    dgamma = (xhat * dout).sum(axis=not_c_axes).reshape(1, C, 1, 1)
+    C = dout.shape[1]
+    _f = lambda x: x.sum(axis=not_c_axes).reshape(1, C, 1, 1)
+    dbeta, dgamma = _f(dout), _f(xhat * dout)
 
 
     dxhat = reshape_fn(dout * gamma)
     xhat = reshape_fn(xhat)
-
+    N_grp, grp_size = xhat.shape
     inv_var = 1 / (np.sqrt(batch_var + eps))
-    dx = (1. / N) * inv_var * (N * dxhat - dxhat.sum(axis=0) - xhat * (dxhat * xhat).sum(axis=0))
-    print(f'dx:{dx.shape}')
+    dx = (1. / N_grp) * inv_var * (N_grp * dxhat - dxhat.sum(axis=0) - xhat * (dxhat * xhat).sum(axis=0))
     dx = dx.T.reshape(*dout.shape)
-
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return dx, dgamma, dbeta
 
