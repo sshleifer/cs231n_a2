@@ -26,7 +26,6 @@ def print_mean_std(x,axis=0):
 
 class TestBN(unittest.TestCase):
     def test_batchnorm(self):
-
         # Gradient check batchnorm backward pass
         np.random.seed(231)
         N, D = 4, 5
@@ -331,7 +330,7 @@ class TestConv(unittest.TestCase):
         y = np.random.randint(10, size=N)
 
         loss, grads = model.loss(X, y)
-        self.assertAlmostEqual(loss, np.log(10))
+        self.assertAlmostEqual(loss, np.log(10), 3)
     def test_three_layer_grads(self):
         num_inputs = 2
         input_dim = (3, 16, 16)
