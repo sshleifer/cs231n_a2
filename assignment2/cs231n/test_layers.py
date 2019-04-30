@@ -509,8 +509,13 @@ class TestConv(unittest.TestCase):
 
         _, cache = spatial_groupnorm_forward(x, gamma, beta, G, gn_param)
         dx, dgamma, dbeta = spatial_groupnorm_backward(dout, cache)
+        print('dx error: ', rel_error(dx_num, dx))
+        print('dgamma error: ', rel_error(da_num, dgamma))
+        print('dbeta error: ', rel_error(db_num, dbeta))
 
         ACCEPTABLE = 1e-7
-        self.assertGreaterEqual(ACCEPTABLE, rel_error(dx_num, dx))
+
         self.assertGreaterEqual(ACCEPTABLE, rel_error(da_num, dgamma))
         self.assertGreaterEqual(ACCEPTABLE, rel_error(db_num, dbeta))
+        self.assertGreaterEqual(ACCEPTABLE, rel_error(dx_num, dx))
+

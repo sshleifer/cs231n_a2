@@ -672,7 +672,7 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     x2d = x.transpose([0, 2,3, 1]).reshape(N*H*W, C)
 
     out, cache = batchnorm_forward(x2d, gamma, beta, bn_param)
-    out = out.reshape(N, H, W, C).transpose([0, 3, 1, 2])
+    out = out.reshape(N, H, W, C).transpose([0, 3, 1, 2])  # TODO(SS): maybe overcomplex?
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return out, cache
 
@@ -743,20 +743,14 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     N, C, H, W = x.shape
     assert C % G == 0
-    grp_size = int(C / G)
-    #X = (x.reshape((N*grp_size, C, H*W)).T)
-    #X = x.transpose([1, 0, 2, 3]).reshape(C, G, -1).T
-    X = x.reshape(N*G, C//G*H*W).T
+    def reshape_fn(x):  return x.reshape(N * G, -1).T  # (N*G, C/G * H * W)
+    X = reshape_fn(x)
 
     batch_mn, batch_var = X.mean(axis=0), X.var(axis=0)
     batch_norm_x = (X - batch_mn) / np.sqrt(batch_var + eps)
     x_norm = batch_norm_x.T.reshape(*x.shape)
     out = gamma * x_norm + beta
-    print(f'out_nat.shape: {out.shape}, X.shape:{X.shape} orig:{x.shape}, norm: {x_norm.shape}')
-    #(20, 2, 6)
-    # (6, 2, 20)
-
-    cache = (X - batch_mn, x_norm, batch_mn, batch_var, gamma, beta, gn_param, eps)
+    cache = (X - batch_mn, x_norm, batch_mn, batch_var, gamma, beta, gn_param, eps, reshape_fn)
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return out, cache
 
@@ -775,28 +769,26 @@ def spatial_groupnorm_backward(dout, cache):
     - dbeta: Gradient with respect to shift parameter, of shape (C,)
     """
     dx, dgamma, dbeta = None, None, None
-    raise NotImplemented()
 
     ###########################################################################
     # TODO: Implement the backward pass for spatial group normalization.      #
     # This will be extremely similar to the layer norm implementation.        #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    xmu, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
-    dbeta = dout.sum(axis=0)
-    dgamma = (xhat * dout).sum(axis=0)
-    N, D = dout.shape
-    dxhat = (dout * gamma).T
+    xmu, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps, reshape_fn = cache
+    not_c_axes = (0, 2, 3)
+    N, C, H, W = dout.shape
+    dbeta = dout.sum(axis=not_c_axes).reshape(1, C, 1, 1)
+    dgamma = (xhat * dout).sum(axis=not_c_axes).reshape(1, C, 1, 1)
 
-    xhat = xhat.T
-    N, D = xhat.shape
+
+    dxhat = reshape_fn(dout * gamma)
+    xhat = reshape_fn(xhat)
 
     inv_var = 1 / (np.sqrt(batch_var + eps))
-    dx = (1. / N) * inv_var * (N * dxhat - np.sum(dxhat, axis=0)
-                               - xhat * (dxhat * xhat).sum(axis=0))
-    dx = dx.T
-
-    dx = dx.reshape(N, H, W, C).transpose([0, 3, 1, 2])
+    dx = (1. / N) * inv_var * (N * dxhat - dxhat.sum(axis=0) - xhat * (dxhat * xhat).sum(axis=0))
+    print(f'dx: ')
+    dx = dx.T.reshape(*dout.shape)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return dx, dgamma, dbeta
