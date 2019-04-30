@@ -138,7 +138,7 @@ class TestDropout(unittest.TestCase):
         X = np.random.randn(N, D)
         y = np.random.randint(C, size=(N,))
 
-        for dropout in [1, 0.75, 0.5]:
+        for dropout in [ 0.5, .75, 1.]:
             print('Running check with dropout = ', dropout)
             model = FullyConnectedNet([H1, H2], input_dim=D, num_classes=C,
                                       weight_scale=5e-2, dtype=np.float64,
@@ -154,6 +154,6 @@ class TestDropout(unittest.TestCase):
                 grad_num = eval_numerical_gradient(f, model.params[name], verbose=False, h=1e-5)
                 err = rel_error(grad_num, grads[name])
                 print('%s relative error: %.2e' % (name, err))
-                self.assertGreaterEqual(1e-6, err)
+                self.assertGreaterEqual(1e-5, err)
 
             print()

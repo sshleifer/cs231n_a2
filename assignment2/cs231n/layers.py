@@ -388,7 +388,8 @@ def dropout_forward(x, dropout_param):
     if mode == 'train':
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         # mask = (np.random.rand(*x.shape) < p) / p
-        mask = np.random.binomial(1, 1 - p, size=x.shape)  * (1/(1-p))
+        #mask = np.random.binomial(1, 1 - p, size=x.shape) * (1/(1-p))
+        mask = (np.random.rand(*x.shape) < p) / p
         out = x * mask
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     elif mode == 'test':
@@ -418,7 +419,7 @@ def dropout_backward(dout, cache):
     dx = None
     if mode == 'train':
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        dx = dout * mask
+        dx = dout * mask# / (1/(1-dropout_param['p']))
         pass
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
