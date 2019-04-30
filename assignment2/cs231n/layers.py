@@ -205,9 +205,8 @@ def batchnorm_backward(dout, cache):
     # might prove to be helpful.                                              #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    N, D  = dout.shape
-    ones = np.ones((N, D))
-    xmu, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps =  cache
+    N, D = dout.shape
+    xmu, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
     dbeta = dout.sum(axis=0)
     dgamma = (xhat * dout).sum(axis=0)
 
@@ -217,15 +216,13 @@ def batchnorm_backward(dout, cache):
     dxhat = dout * gamma
     divar = (dxhat * xmu).sum(axis=0)
 
-    dsqrtvar = -1. / (sqrtvar**2) * divar
-    dvar = 0.5 / np.sqrt(bve) * dsqrtvar
+    dsqrtvar = -1. / (sqrtvar ** 2) * divar
+    dvar = 0.5 / sqrtvar * dsqrtvar
     dxmu1 = dxhat * ivar
-    dsq = 1./N * ones * dvar
-    dxm2 = dsq * 2 * xmu
+    dxmu2 = dvar / N * 2 * xmu
 
-    dx1 = dxmu1 + dxm2
-    dmu = -dx1.sum(axis=0)
-    dx2 = 1/N * ones * dmu
+    dx1 = dxmu1 + dxmu2
+    dx2 = -dx1.sum(axis=0) / N
     dx = dx1 + dx2
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -235,19 +232,6 @@ def batchnorm_backward(dout, cache):
 def rel_error(x, y):
     """ returns relative error """
     return np.max(np.abs(x - y) / (np.maximum(1e-8, np.abs(x) + np.abs(y))))
-
-
-def bn_smart(dout, cache):
-    #x, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
-    xmu, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
-    dbeta = dout.sum(axis=0)
-    dgamma = (xhat * dout).sum(axis=0)
-    N, D = dout.shape
-    dxhat = dout * gamma
-    inv_var = 1 / (np.sqrt(batch_var + eps))
-    dx = (1. / N) * inv_var * (N * dxhat - np.sum(dxhat, axis=0)
-                               - xhat * (dxhat * xhat).sum(axis=0))
-    return dx, dgamma, dbeta
 
 
 def batchnorm_backward_alt(dout, cache):
@@ -274,8 +258,14 @@ def batchnorm_backward_alt(dout, cache):
     # single statement; our implementation fits on a single 80-character line.#
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    dx, dgamma, dbeta =  bn_smart(dout, cache)
+    xmu, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
+    dbeta = dout.sum(axis=0)
+    dgamma = (xhat * dout).sum(axis=0)
+    N, D = dout.shape
+    dxhat = dout * gamma
+    inv_var = 1 / (np.sqrt(batch_var + eps))
+    dx = (1. / N) * inv_var * (N * dxhat - np.sum(dxhat, axis=0)
+                               - xhat * (dxhat * xhat).sum(axis=0))
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
