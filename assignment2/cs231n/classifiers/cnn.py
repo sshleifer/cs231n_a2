@@ -136,12 +136,19 @@ class ThreeLayerConvNet(object):
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         grads = {}
         loss, dout = softmax_loss(scores, y)
+
         dout, grads['W3'], grads['b3'] = affine_backward(dout, c3)
         dout, grads['W2'], grads['b2'] = affine_relu_backward(dout, c2)
         dx, grads['W1'], grads['b1'] = conv_relu_pool_backward(dout, c1)
+        if self.reg > 0:
+            reg_losses = [np.sum(self.params[k] ** 2) for k in ['W1', 'W2', 'W3']]
+            reg_loss = np.sum(reg_losses) * self.reg * .5
+            loss += reg_loss
+            for k in ['W1', 'W2', 'W3']:
+                grads[k] += self.reg * self.params[k]
+
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
-        #                             END OF YOUR CODE                             #
-        ############################################################################
+
 
         return loss, grads
