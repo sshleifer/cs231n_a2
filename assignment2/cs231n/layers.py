@@ -442,7 +442,7 @@ def dropout_backward(dout, cache):
     elif mode == 'test':
         dx = dout
     return dx
-
+E, R = enumerate, range
 
 def conv_forward_naive(x, w, b, conv_param):
     """
@@ -486,7 +486,7 @@ def conv_forward_naive(x, w, b, conv_param):
     Wp = int(1 + (W + 2 * P - WW) / stride)
     out = np.zeros((N, F, Hp, Wp))
     x_pad = np.pad(x, ((0, 0), (0, 0), (P, P), (P, P)), mode='constant')
-    E, R = enumerate, range
+
     for n, img in E(x_pad):
         for f, filter in E(w):
             for hp in R(Hp):
@@ -519,13 +519,32 @@ def conv_backward_naive(dout, cache):
     # TODO: Implement the convolutional backward pass.                        #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    x, w, b, conv_param = cache
+    N, F, Hp, Wp = dout.shape
 
-    pass
+    F, C, HH, WW = w.shape
+    P, stride = conv_param['pad'], conv_param['stride']
+    x_pad = np.pad(x, ((0, 0), (0, 0), (P, P), (P, P)), mode='constant')
+    dx, dw  = np.zeros_like(x_pad), np.zeros_like(w)
+    for n, img in E(x_pad):
+        for f, filter in E(w):
+            for hp in R(Hp):
+                for wp in R(Wp):
+                    xstart = hp * stride
+                    ystart = wp * stride
+                    s1, s2 = slice(xstart, xstart + HH), slice(ystart, ystart + WW)
+                    region = img[:, s1, s2]
+
+                    output_region = dout[n, f, hp, wp]
+                    dx[n, :, s1, s2] += (output_region * filter)
+                    dw[f] += (region * output_region)
+
+
+
+    db = dout.sum(axis=(0,2,3))
+    dx = dx[:, :, P:-P, P:-P]  # unpad
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ###########################################################################
-    #                             END OF YOUR CODE                            #
-    ###########################################################################
     return dx, dw, db
 
 
@@ -544,8 +563,8 @@ def max_pool_forward_naive(x, pool_param):
 
     Returns a tuple of:
     - out: Output data, of shape (N, C, H', W') where H' and W' are given by
-      H' = 1 + (H - pool_height) / stride
-      W' = 1 + (W - pool_width) / stride
+      Hp = 1 + (H - pool_height) / stride
+      Wp = 1 + (W - pool_width) / stride
     - cache: (x, pool_param)
     """
     out = None
@@ -553,8 +572,21 @@ def max_pool_forward_naive(x, pool_param):
     # TODO: Implement the max-pooling forward pass                            #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    N, C, H, W = x.shape
+    ph, pw, stride = pool_param['pool_height'], pool_param['pool_width'], pool_param['stride']
+    Hp = int(1 + (H - ph) / stride)
+    Wp = int(1 + (W - pw) / stride)
+    out = np.zeros((N, C, Hp, Wp))
+    for n, img in E(x):
+        for c, channel in E(img):
+            for hp in R(Hp):
+                for wp in R(Wp):
+                    xstart = hp * stride
+                    ystart = wp * stride
+                    s1, s2 = slice(xstart, xstart + Hp), slice(ystart, ystart + Wp)
+                    region = channel[s1, s2]
+                    out[n, c, hp, wp] = region.max()
 
-    pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -563,6 +595,8 @@ def max_pool_forward_naive(x, pool_param):
     cache = (x, pool_param)
     return out, cache
 
+def nd_argmax(a):
+    return np.unravel_index(np.argmax(a, axis=None), a.shape)
 
 def max_pool_backward_naive(dout, cache):
     """
@@ -575,13 +609,26 @@ def max_pool_backward_naive(dout, cache):
     Returns:
     - dx: Gradient with respect to x
     """
-    dx = None
+
     ###########################################################################
     # TODO: Implement the max-pooling backward pass                           #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+    x, pool_param = cache
+    N, C, H, W = x.shape
+    ph, pw, stride = pool_param['pool_height'], pool_param['pool_width'], pool_param['stride']
+    Hp = int(1 + (H - ph) / stride)
+    Wp = int(1 + (W - pw) / stride)
+    dx= np.zeros_like(x)
+    for n, img in E(x):
+        for c, channel in E(img):
+            for hp in R(Hp):
+                for wp in R(Wp):
+                    xstart = hp * stride
+                    ystart = wp * stride
+                    s1, s2 = slice(xstart, xstart + Hp), slice(ystart, ystart + Wp)
+                    max_x, max_y = nd_argmax(channel[s1, s2])
+                    dx[n, c, xstart + max_x, ystart + max_y] += dout[n, c, hp, wp]
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
