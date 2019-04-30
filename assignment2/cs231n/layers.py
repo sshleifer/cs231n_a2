@@ -1,4 +1,3 @@
-from builtins import range
 import numpy as np
 from cs231n.optim import lin_combo
 
@@ -221,7 +220,6 @@ def batchnorm_backward(dout, cache):
     dsqrtvar = -1. / (sqrtvar**2) * divar
     dvar = 0.5 / np.sqrt(bve) * dsqrtvar
     dxmu1 = dxhat * ivar
-    #dvar =  * xwhite * (-0.5 * np.power(bve, -1.5))
     dsq = 1./N * ones * dvar
     dxm2 = dsq * 2 * xmu
 
@@ -233,6 +231,10 @@ def batchnorm_backward(dout, cache):
 
 
     return dx, dgamma, dbeta
+
+def rel_error(x, y):
+    """ returns relative error """
+    return np.max(np.abs(x - y) / (np.maximum(1e-8, np.abs(x) + np.abs(y))))
 
 
 def bn_smart(dout, cache):
@@ -247,48 +249,6 @@ def bn_smart(dout, cache):
                                - xhat * (dxhat * xhat).sum(axis=0))
     return dx, dgamma, dbeta
 
-
-def batchnorm_backward_vold(dout, cache):
-  (x, batch_norm_x, batch_mean, batch_var, gamma, beta, bn_param) = cache
-  N, D = x.shape
-  eps = bn_param.get('eps', 1e-5)
-  dx, dgamma, dbeta = None, None, None
-
-  #############################################################################
-  # TODO: Implement the backward pass for batch normalization. Store the      #
-  # results in the dx, dgamma, and dbeta variables.                           #
-  #############################################################################
-
-  dxhat = dout * gamma
-  dvar = np.sum(dxhat, axis=0) * (x - batch_mean) * (-0.5 * np.power(batch_var + eps, -1.5))
-  dxm1 = dxhat / (batch_var + eps)
-  dxm2 = np.ones((N,D)) * dvar / N * (2 * (x - batch_mean))
-  dmu = -1 * np.sum(dxm1 + dxm2, axis=0)
-  dx1 = dxm1 + dxm2
-  dx2 = np.ones((N,D)) * dmu / N
-  dx = dx1 + dx2
-  dgamma = np.sum(np.multiply(dout, batch_norm_x), axis=0)
-  dbeta = np.sum(dout, axis=0)
-  return dx, dgamma, dbeta
-
-def bn_stupid(dout, cache):
-    N, D  = dout.shape
-    ones = np.ones((N, D))
-    x, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
-    dbeta = dout.sum(axis=0)
-    dgamma = (xhat * dout).sum(axis=0)
-    xwhite = x - batch_mn
-    bve = batch_var + eps
-    dxhat = dout * gamma
-
-    dxm1 = dxhat / bve
-    dvar = dxhat.sum(axis=0) * xwhite * (-0.5 * np.power(bve, -1.5))
-    dxm2 = ones * dvar / N * (2 * xwhite)
-    dx1 = dxm1 + dxm2
-    dmu = -dx1.sum(axis=0)
-    dx2 = ones * dmu / N
-    dx = dx1 + dx2
-    return dx, dgamma, dbeta
 
 def batchnorm_backward_alt(dout, cache):
     """
