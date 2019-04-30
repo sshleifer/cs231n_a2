@@ -114,7 +114,10 @@ def relu_backward(dout, cache):
     return dx
 
 
-def batchnorm_forward(x, gamma, beta, bn_param):
+
+
+
+def _batchnorm_forward(x, gamma, beta, bn_param):
     """
     Forward pass for batch normalization.
 
@@ -167,11 +170,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         batch_norm_x = (x - batch_mn) / np.sqrt(batch_var + eps)
         out = gamma * batch_norm_x + beta
-        # dout w.r.t gamma = (batch_norm_x )
-        # dout w.r.t beta = ones
-        # dout w.r.t x = gamma * (dbatchnormx w.r.t x)
-        # (dbatchnormx w.r.t x) =
-        cache = (x, batch_norm_x, batch_mn, batch_var, gamma, beta, bn_param, eps)
+        cache = (x - batch_mn, batch_norm_x, batch_mn, batch_var, gamma, beta, bn_param, eps)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     elif mode == 'test':
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -185,7 +184,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     return out, cache
 
 
-def batchnorm_backward(dout, cache):
+def _batchnorm_backward(dout, cache):
     """
     Backward pass for batch normalization.
 
@@ -212,23 +211,24 @@ def batchnorm_backward(dout, cache):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     N, D  = dout.shape
     ones = np.ones((N, D))
-    x, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps =  cache
+    xmu, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps =  cache
     dbeta = dout.sum(axis=0)
     dgamma = (xhat * dout).sum(axis=0)
-    xwhite = x - batch_mn
+
     bve = batch_var + eps
-    dxhat = dout * gamma
-    divar = (dxhat *xwhite).sum(axis=0)
     sqrtvar = np.sqrt(bve)
+    ivar = 1 / sqrtvar
+    dxhat = dout * gamma
+    divar = (dxhat * xmu).sum(axis=0)
+
     dsqrtvar = -1. / (sqrtvar**2) * divar
     dvar = 0.5 / np.sqrt(bve) * dsqrtvar
-
-    dxm1 = dxhat / bve
+    dxmu1 = dxhat * ivar
     #dvar =  * xwhite * (-0.5 * np.power(bve, -1.5))
     dsq = 1./N * ones * dvar
-    dxm2 = dsq * 2 * xwhite
+    dxm2 = dsq * 2 * xmu
 
-    dx1 = dxm1 + dxm2
+    dx1 = dxmu1 + dxm2
     dmu = -dx1.sum(axis=0)
     dx2 = 1/N * ones * dmu
     dx = dx1 + dx2
