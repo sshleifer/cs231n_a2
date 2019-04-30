@@ -114,10 +114,7 @@ def relu_backward(dout, cache):
     return dx
 
 
-
-
-
-def _batchnorm_forward(x, gamma, beta, bn_param):
+def batchnorm_forward(x, gamma, beta, bn_param):
     """
     Forward pass for batch normalization.
 
@@ -184,7 +181,7 @@ def _batchnorm_forward(x, gamma, beta, bn_param):
     return out, cache
 
 
-def _batchnorm_backward(dout, cache):
+def batchnorm_backward(dout, cache):
     """
     Backward pass for batch normalization.
 
@@ -239,7 +236,8 @@ def _batchnorm_backward(dout, cache):
 
 
 def bn_smart(dout, cache):
-    x, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
+    #x, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
+    xmu, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
     dbeta = dout.sum(axis=0)
     dgamma = (xhat * dout).sum(axis=0)
     N, D = dout.shape
