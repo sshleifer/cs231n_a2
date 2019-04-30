@@ -387,8 +387,8 @@ class TestConv(unittest.TestCase):
         out, _ = spatial_batchnorm_forward(x, gamma, beta, bn_param)
         print('After spatial batch normalization:')
         print('  Shape: ', out.shape)
-        print('  Means: ', out.mean(axis=(0, 2, 3)))
-        print('  Stds: ', out.std(axis=(0, 2, 3)))
+        print('  Means close to zero: ', out.mean(axis=(0, 2, 3)))
+        print('  Stds close to 1: ', out.std(axis=(0, 2, 3)))
 
         # Means should be close to beta and stds close to gamma
         gamma, beta = np.asarray([3, 4, 5]), np.asarray([6, 7, 8])
@@ -396,10 +396,11 @@ class TestConv(unittest.TestCase):
         print('After spatial batch normalization (nontrivial gamma, beta):')
         print('  Shape: ', out.shape)
         mns = out.mean(axis=(0, 2, 3))
-        self.assertTrue((np.round(mns, 1) == gamma).all())
+        print('  Means close to [6,7,8]', out.mean(axis=(0, 2, 3)))
+        print('  Stds close to [3,4,5] ', out.std(axis=(0, 2, 3)))
+        self.assertTrue((np.round(mns, 1) == beta).all())
         self.assertTrue((np.round(out.std(axis=(0, 2, 3)), 1)==gamma).all())
-        print('  Means: ', out.mean(axis=(0, 2, 3)))
-        print('  Stds: ', out.std(axis=(0, 2, 3)))
+
 
 
     def test_spatial_batchnorm_bwd(self):
