@@ -2,11 +2,12 @@ import numpy as np
 import unittest
 
 from cs231n.layers import batchnorm_forward, batchnorm_backward, rel_error, batchnorm_backward_alt
+from cs231n.gradient_check import eval_numerical_gradient_array
+import time
 
 class TestBN(unittest.TestCase):
     def test_batchnorm(self):
-        from cs231n.gradient_check import eval_numerical_gradient_array
-        import time
+
         # Gradient check batchnorm backward pass
         np.random.seed(231)
         N, D = 4, 5
@@ -30,8 +31,9 @@ class TestBN(unittest.TestCase):
         print('dx error: ', rel_error(dx_num, dx))
         print('dgamma error: ', rel_error(da_num, dgamma))
         print('dbeta error: ', rel_error(db_num, dbeta))
+        self.assertGreater(1e-8, rel_error(dx_num, dx),)
 
-
+    def test_bn_alt(self):
         np.random.seed(231)
         N, D = 100, 500
         x = 5 * np.random.randn(N, D) + 12
@@ -48,7 +50,9 @@ class TestBN(unittest.TestCase):
         dx2, dgamma2, dbeta2 = batchnorm_backward_alt(dout, cache)
         t3 = time.time()
 
+
         print('dx difference: ', rel_error(dx1, dx2))
         print('dgamma difference: ', rel_error(dgamma1, dgamma2))
         print('dbeta difference: ', rel_error(dbeta1, dbeta2))
         print('speedup: %.2fx' % ((t2 - t1) / (t3 - t2)))
+        self.assertGreater(1e-8, rel_error(dx1, dx2), )
