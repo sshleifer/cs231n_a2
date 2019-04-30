@@ -3,7 +3,17 @@ import unittest
 
 from cs231n.layers import batchnorm_forward, batchnorm_backward, rel_error, batchnorm_backward_alt
 from cs231n.gradient_check import eval_numerical_gradient_array
+from cs231n.classifiers.fc_net import FullyConnectedNet
+from cs231n.solver import Solver
 import time
+
+
+import pickle
+def read_pickle(path):
+    """pickle.load(path)"""
+    with open(path, 'rb') as f:
+        return pickle.load(f)
+
 
 class TestBN(unittest.TestCase):
     def test_batchnorm(self):
@@ -56,3 +66,33 @@ class TestBN(unittest.TestCase):
         print('dbeta difference: ', rel_error(dbeta1, dbeta2))
         print('speedup: %.2fx' % ((t2 - t1) / (t3 - t2)))
         self.assertGreater(1e-8, rel_error(dx1, dx2), )
+    def test_in_net(self):
+        np.random.seed(231)
+        # Try training a very deep net with batchnorm
+        hidden_dims = [100, 100]
+        small_data = read_pickle('small_data.pkl')
+
+        weight_scale = 2e-2
+        bn_model = FullyConnectedNet(hidden_dims, weight_scale=weight_scale,
+                                     normalization='batchnorm')
+        model = FullyConnectedNet(hidden_dims, weight_scale=weight_scale, normalization=None)
+
+        print('Solver with batch norm:')
+        bn_solver = Solver(bn_model, small_data,
+                           num_epochs=10, batch_size=50,
+                           update_rule='adam',
+                           optim_config={
+                               'learning_rate': 1e-3,
+                           },
+                           verbose=True, print_every=20)
+        bn_solver.train()
+
+        print('\nSolver without batch norm:')
+        solver = Solver(model, small_data,
+                        num_epochs=10, batch_size=50,
+                        update_rule='adam',
+                        optim_config={
+                            'learning_rate': 1e-3,
+                        },
+                        verbose=True, print_every=20)
+        solver.train()

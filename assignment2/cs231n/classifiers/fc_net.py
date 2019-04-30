@@ -6,117 +6,6 @@ from cs231n.layers import *
 from cs231n.layer_utils import *
 
 
-class TwoLayerNetOrig(object):
-    """
-    A two-layer fully-connected neural network with ReLU nonlinearity and
-    softmax loss that uses a modular layer design. We assume an input dimension
-    of D, a hidden dimension of H, and perform classification over C classes.
-
-    The architecure should be affine - relu - affine - softmax.
-
-    Note that this class does not implement gradient descent; instead, it
-    will interact with a separate Solver object that is responsible for running
-    optimization.
-
-    The learnable parameters of the model are stored in the dictionary
-    self.params that maps parameter names to numpy arrays.
-    """
-
-    def __init__(self, input_dim=3*32*32, hidden_dim=100, num_classes=10,
-                 weight_scale=1e-3, reg=0.0):
-        """
-        Initialize a new network.
-
-        Inputs:
-        - input_dim: An integer giving the size of the input
-        - hidden_dim: An integer giving the size of the hidden layer
-        - num_classes: An integer giving the number of classes to classify
-        - weight_scale: Scalar giving the standard deviation for random
-          initialization of the weights.
-        - reg: Scalar giving L2 regularization strength.
-        """
-        self.params = {}
-        self.reg = reg
-
-        ############################################################################
-        # TODO: Initialize the weights and biases of the two-layer net. Weights    #
-        # should be initialized from a Gaussian centered at 0.0 with               #
-        # standard deviation equal to weight_scale, and biases should be           #
-        # initialized to zero. All weights and biases should be stored in the      #
-        # dictionary self.params, with first layer weights                         #
-        # and biases using the keys 'W1' and 'b1' and second layer                 #
-        # weights and biases using the keys 'W2' and 'b2'.                         #
-        ############################################################################
-        # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
-
-        # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        ############################################################################
-        #                             END OF YOUR CODE                             #
-        ############################################################################
-
-
-    def loss(self, X, y=None):
-        """
-        Compute loss and gradient for a minibatch of data.
-
-        Inputs:
-        - X: Array of input data of shape (N, d_1, ..., d_k)
-        - y: Array of labels, of shape (N,). y[i] gives the label for X[i].
-
-        Returns:
-        If y is None, then run a test-time forward pass of the model and return:
-        - scores: Array of shape (N, C) giving classification scores, where
-          scores[i, c] is the classification score for X[i] and class c.
-
-        If y is not None, then run a training-time forward and backward pass and
-        return a tuple of:
-        - loss: Scalar value giving the loss
-        - grads: Dictionary with the same keys as self.params, mapping parameter
-          names to gradients of the loss with respect to those parameters.
-        """
-        scores = None
-        ############################################################################
-        # TODO: Implement the forward pass for the two-layer net, computing the    #
-        # class scores for X and storing them in the scores variable.              #
-        ############################################################################
-        # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
-
-        # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        ############################################################################
-        #                             END OF YOUR CODE                             #
-        ############################################################################
-
-        # If y is None then we are in test mode so just return scores
-        if y is None:
-            return scores
-
-        loss, grads = 0, {}
-        ############################################################################
-        # TODO: Implement the backward pass for the two-layer net. Store the loss  #
-        # in the loss variable and gradients in the grads dictionary. Compute data #
-        # loss using softmax, and make sure that grads[k] holds the gradients for  #
-        # self.params[k]. Don't forget to add L2 regularization!                   #
-        #                                                                          #
-        # NOTE: To ensure that your implementation matches ours and you pass the   #
-        # automated tests, make sure that your L2 regularization includes a factor #
-        # of 0.5 to simplify the expression for the gradient.                      #
-        ############################################################################
-        # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
-
-        # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        ############################################################################
-        #                             END OF YOUR CODE                             #
-        ############################################################################
-
-        return loss, grads
-
-
 class TwoLayerNet(object):
     """
     A two-layer fully-connected neural network with ReLU nonlinearity and
@@ -147,6 +36,7 @@ class TwoLayerNet(object):
           initialization of the weights.
         - reg: Scalar giving L2 regularization strength.
         """
+        # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         self.params = {}
         self.reg = reg
         self.W1 = np.random.randn(input_dim, hidden_dim) * weight_scale
@@ -154,6 +44,7 @@ class TwoLayerNet(object):
         self.W2 = np.random.randn(hidden_dim, num_classes) * weight_scale
         self.b2 = np.zeros(num_classes)
         self.params = {'W1': self.W1, 'W2': self.W2, 'b1': self.b1, 'b2': self.b2}
+        # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     def loss(self, X, y=None):
         """
@@ -174,6 +65,7 @@ class TwoLayerNet(object):
         - grads: Dictionary with the same keys as self.params, mapping parameter
           names to gradients of the loss with respect to those parameters.
         """
+        # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         x, cache1 = affine_relu_forward(X, self.params['W1'], self.params['b1'])
         scores, cache2 = affine_forward(x, self.params['W2'], self.params['b2'])
 
@@ -188,6 +80,7 @@ class TwoLayerNet(object):
         grads = dict(W2=dw2 + self.reg * self.params['W2'], b2=db2)
         _, dw1, db1 = affine_relu_backward(dx, cache1)
         grads.update(dict(W1=dw1 + self.reg * self.params['W1'], b1=db1))
+        # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return loss, grads
 
 class FullyConnectedNet(object):
@@ -254,25 +147,24 @@ class FullyConnectedNet(object):
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         def random_init_w(in_dim, out_dim): return np.random.randn(in_dim, out_dim) * weight_scale
 
-        self.params['W1'] = random_init_w(input_dim, hidden_dims[0])
-        self.params['b1'] = np.zeros(hidden_dims[0])
+        #self.params['W1'] = random_init_w(input_dim, hidden_dims[0])
+        #self.params['b1'] = np.zeros(hidden_dims[0])
 
-        self.params[f'W{self.num_layers}'] = random_init_w(hidden_dims[-1], num_classes)
-        self.params[f'b{self.num_layers}'] = np.zeros(num_classes)
-
+        #self.params[f'W{self.num_layers}'] = random_init_w(hidden_dims[-1], num_classes)
+        #self.params[f'b{self.num_layers}'] = np.zeros(num_classes)
+        dims = [input_dim] + hidden_dims + [num_classes]
         for i in range(self.num_layers):
             if f'W{i+1}' not in self.params:
-                self.params[f'W{i+1}'] = random_init_w(hidden_dims[i-1], hidden_dims[i])
-                self.params[f'b{i+1}'] = np.zeros(hidden_dims[i])
-            # out_shape = self.params[f'W{i+1}'].shape[-1]
-            # self.params[f'gamma{i+1}'] = np.ones(out_shape)
-            # self.params[f'beta{i+1}'] = np.zeros(out_shape)
+                self.params[f'W{i+1}'] = random_init_w(dims[i], dims[i+1])
+                self.params[f'b{i+1}'] = np.zeros(dims[i+1])
+
+            if self.use_batchnorm and i < self.num_layers:
+                out_shape = self.params[f'W{i + 1}'].shape[-1]
+                self.params[f'gamma{i+1}'] = np.ones(out_shape)
+                self.params[f'beta{i+1}'] = np.zeros(out_shape)
 
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        ############################################################################
-        #                             END OF YOUR CODE                             #
-        ############################################################################
 
         # When using dropout we need to pass a dropout_param dictionary to each
         # dropout layer so that the layer knows the dropout probability and the mode
@@ -341,21 +233,18 @@ class FullyConnectedNet(object):
         inputs = {-1: X}
         self.cache = {}
         bn_cache = {}
+        dropout_cache = {}
         funcs = self._funcs_to_use
         for i in range(self.num_layers):
-
             forward_func = funcs[i][0]
             W, b = self.params[f'W{i+1}'], self.params[f'b{i+1}']
-            X = inputs[i-1]
-            X, self.cache[i] = forward_func(X, W, b)
-            # if self.use_dropout:
-            #     X, do_cache = dropout_forward(X, self.dropout_param)
-            #     dropout_cache[i] = do_cache
-            if self.use_batchnorm and i <= len(self.bn_params):
+            X, self.cache[i] = forward_func(inputs[i-1], W, b)
+            if self.use_dropout:
+                 X, do_cache = dropout_forward(X, self.dropout_param)
+                 dropout_cache[i] = do_cache
+            if self.use_batchnorm and i < len(self.bn_params):
                  g, b = self.params[f'gamma{i + 1}'], self.params[f'beta{i + 1}']
-                 X, bcache = batchnorm_forward(X, g, b, self.bn_params[i])
-                 bn_cache[i] = bcache
-            #cache_dict[layer] = cache
+                 X, bn_cache[i] = batchnorm_forward(X, g, b, self.bn_params[i])
             inputs[i] = X
         scores = inputs[i]
 
@@ -386,23 +275,28 @@ class FullyConnectedNet(object):
         loss += reg_loss
         grads = {}
         dx = dout
-        for layer in reversed(range(self.num_layers)):
-            if self.use_batchnorm and i <= len(self.bn_params):
-                gk,betak = f'gamma{layer+1}', f'beta{layer+1}'
+        for i in reversed(range(self.num_layers)):
+            if self.use_batchnorm and i < len(self.bn_params):
+                gk,betak = f'gamma{i+1}', f'beta{i+1}'
                 dx, grads[gk], grads[betak] = batchnorm_backward_alt(dx, bn_cache[i])
 
             backward_func = funcs[i][1]
-            wk, bk = f'W{layer+1}', f'b{layer+1}'
+            wk, bk = f'W{i+1}', f'b{i+1}'
 
-            dx, dw, db = backward_func(dx, self.cache[layer])
+            dx, dw, db = backward_func(dx, self.cache[i])
             grads[wk] = dw + self.reg * self.params[wk]
             grads[bk] = db
 
             # grads[gk], grads[betak] =
+        def assert_set_equal(a,b):
+            a,b = set(a), set(b)
+            msg = f'left difference{a.difference(b)}, right_difference: {b.difference(a)}'
+            assert a == b, msg
 
+        assert_set_equal(grads.keys(), self.params.keys())
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
-        assert set(grads.keys()) == set(self.params.keys())
+
         return loss, grads
