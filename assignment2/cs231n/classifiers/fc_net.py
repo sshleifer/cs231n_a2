@@ -147,11 +147,6 @@ class FullyConnectedNet(object):
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         def random_init_w(in_dim, out_dim): return np.random.randn(in_dim, out_dim) * weight_scale
 
-        #self.params['W1'] = random_init_w(input_dim, hidden_dims[0])
-        #self.params['b1'] = np.zeros(hidden_dims[0])
-
-        #self.params[f'W{self.num_layers}'] = random_init_w(hidden_dims[-1], num_classes)
-        #self.params[f'b{self.num_layers}'] = np.zeros(num_classes)
         dims = [input_dim] + hidden_dims + [num_classes]
         for i in range(self.num_layers):
             if f'W{i+1}' not in self.params:
@@ -159,7 +154,6 @@ class FullyConnectedNet(object):
                 self.params[f'b{i+1}'] = np.zeros(dims[i+1])
 
             if self.use_batchnorm and (i+1) < self.num_layers:
-                print(f'Adding bn for {i}')
                 out_shape = self.params[f'W{i + 1}'].shape[-1]
                 self.params[f'gamma{i+1}'] = np.ones(out_shape)
                 self.params[f'beta{i+1}'] = np.zeros(out_shape)
