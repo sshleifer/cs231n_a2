@@ -218,13 +218,19 @@ def batchnorm_backward(dout, cache):
     xwhite = x - batch_mn
     bve = batch_var + eps
     dxhat = dout * gamma
+    divar = (dxhat *xwhite).sum(axis=0)
+    sqrtvar = np.sqrt(bve)
+    dsqrtvar = -1. / (sqrtvar**2) * divar
+    dvar = 0.5 / np.sqrt(bve) * dsqrtvar
 
     dxm1 = dxhat / bve
-    dvar = dxhat.sum(axis=0) * xwhite * (-0.5 * np.power(bve, -1.5))
-    dxm2 = ones * dvar / N * (2 * xwhite)
+    #dvar =  * xwhite * (-0.5 * np.power(bve, -1.5))
+    dsq = 1./N * ones * dvar
+    dxm2 = dsq * 2 * xwhite
+
     dx1 = dxm1 + dxm2
     dmu = -dx1.sum(axis=0)
-    dx2 = ones * dmu / N
+    dx2 = 1/N * ones * dmu
     dx = dx1 + dx2
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
