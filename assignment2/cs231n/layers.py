@@ -306,10 +306,10 @@ def layernorm_forward(x, gamma, beta, ln_param):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     X = x.T
     batch_mn, batch_var = X.mean(axis=0), X.var(axis=0)
-    batch_norm_x = (X - batch_mn) / np.sqrt(batch_var + eps)
+    batch_norm_x = ((X - batch_mn) / np.sqrt(batch_var + eps)).T
 
-    out = gamma * batch_norm_x.T + beta
-    cache = (X - batch_mn, batch_norm_x.T, batch_mn, batch_var, gamma, beta, ln_param, eps)
+    out = gamma * batch_norm_x + beta
+    cache = (X - batch_mn, batch_norm_x, batch_mn, batch_var+eps, gamma )
 
     # out, cache =  batchnorm_forward(x.T, gamma, beta,ln_param)
     # cache[1] = cache[1].T
@@ -347,17 +347,14 @@ def layernorm_backward(dout, cache):
     # still apply!                                                            #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    xmu, xhat, batch_mn, batch_var, gamma, beta, bn_param, eps = cache
+    xmu, xhat, batch_mn, bve, gamma = cache
     dbeta = dout.sum(axis=0)
     dgamma = (xhat * dout).sum(axis=0)
-    N, D = dout.shape
     dxhat = (dout * gamma).T
-
     xhat = xhat.T
     N, D = xhat.shape
 
-    inv_var = 1 / (np.sqrt(batch_var + eps))
+    inv_var = 1 / (np.sqrt(bve))
     dx = (1. / N) * inv_var * (N * dxhat - np.sum(dxhat, axis=0)
                                - xhat * (dxhat * xhat).sum(axis=0))
     dx = dx.T
@@ -778,8 +775,6 @@ def spatial_groupnorm_backward(dout, cache):
     C = dout.shape[1]
     _f = lambda x: x.sum(axis=not_c_axes).reshape(1, C, 1, 1)
     dbeta, dgamma = _f(dout), _f(xhat * dout)
-
-
     dxhat = reshape_fn(dout * gamma)
     xhat = reshape_fn(xhat)
     N_grp, grp_size = xhat.shape
@@ -841,3 +836,6 @@ def softmax_loss(x, y):
     dx[np.arange(N), y] -= 1
     dx /= N
     return loss, dx
+
+
+
