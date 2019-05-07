@@ -48,8 +48,13 @@ for next layer m=3, k=5, s=1, so 5+2 = 7x7.
 Compare (Receptive Field, Memory, #Params, Flops) for following architectures:
 	`VGGNet`
 	`AlexNet`
+I dont want to do this out....
 
 **TODO**
+m =3
+m = 5
+m = 7
+
 
 **4. Explain when you would use `{Group, Instance, Layer, Batch} Norm` and why?
 and also numpy code**
