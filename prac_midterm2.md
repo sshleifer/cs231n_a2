@@ -9,6 +9,10 @@ We have a 9x9 input volume
 
 	What is the input volume receptive field of one neuron in the final conv layer.
 
+First activation map shape = 9X9 (same padding)
+	(to get same padding set p=(k-1)/2=2)
+
+
 
 **3. Params**
 
@@ -17,14 +21,14 @@ Compare (Receptive Field, Memory, #Params, Flops) for following architectures:
 	`AlexNet`
 
 
+
+
 **4. Explain when you would use `{Group, Instance, Layer, Batch} Norm` and why?**
-
-
 
 
 **4b.**
 
-suppose output of layer `arr = np.random.randn((N,C,H,W))`
+Suppose output of layer `arr = np.random.randn((N,C,H,W))`.
 Write the numpy math for calculating the mean for each type of norm.
 
 
@@ -42,7 +46,14 @@ Write the numpy math for calculating the mean for each type of norm.
 		"At test-time sample characters one at a time, feed back to model"
 		At train time condition on true past characters
 
-2.TODO
+2.
+
+RF Formula: `n = k + s(m- 1)` receptive field size
+
+for last layer: k=3, s=2, m=1
+so n=k=3
+for next layer m=3, k=5, s=1
+so 5+2 = 7x7
 
 3.TODO
 
