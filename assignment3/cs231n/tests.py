@@ -66,7 +66,7 @@ class TestNB1(unittest.TestCase):
         print('db error: ', rel_error(db_num, db))
 
 
-    def test_rnn_forward(self):
+    def test_rnn_forward_backward(self):
         np.random.seed(231)
 
         N, D, T, H = 2, 3, 10, 5
