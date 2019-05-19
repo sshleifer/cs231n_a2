@@ -141,14 +141,21 @@ class CaptioningRNN(object):
         # in your implementation, if needed.                                       #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        do_rnn = self.cell_type == 'rnn'
+        h0, aff_cache = affine_forward(features, W_proj, b_proj)
+        print(h0.shape)
+        embs_in, embs_cache = word_embedding_forward(captions_in, W_embed)
+        fwd, bwd = (rnn_forward, rnn_backward) if self.cell_type=='rnn' else (lstm_forward, lstm_backward)
+        h, cache = fwd(embs_in, h0, Wx, Wh, b)
+        vscores, temp_cache = temporal_affine_forward(h, W_vocab, b_vocab)
+        loss, dscores = temporal_softmax_loss(vscores, captions_out, mask)
 
-        pass
 
+        dh, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dscores, temp_cache)
+        demb, dh0, grads['Wx'], grads['Wh'], grads['b'] = bwd(dh, cache)
+        grads['W_embed'] = word_embedding_backward(demb, embs_cache)
+        dx, grads['W_proj'], grads['b_proj'] = affine_backward(dh0, aff_cache)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        ############################################################################
-        #                             END OF YOUR CODE                             #
-        ############################################################################
-
         return loss, grads
 
 

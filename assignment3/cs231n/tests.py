@@ -25,64 +25,7 @@ def rel_error_assert(a, b, tol=1e-8):
 class TestNB2(unittest.TestCase):
 
 
-    def test_captioning_rnn(self):
-        N, D, W, H = 10, 20, 30, 40
-        word_to_idx = {'<NULL>': 0, 'cat': 2, 'dog': 3}
-        V = len(word_to_idx)
-        T = 13
 
-        model = CaptioningRNN(word_to_idx,
-                              input_dim=D,
-                              wordvec_dim=W,
-                              hidden_dim=H,
-                              cell_type='rnn',
-                              dtype=np.float64)
-
-        # Set all model parameters to fixed values
-        for k, v in model.params.items():
-            model.params[k] = np.linspace(-1.4, 1.3, num=v.size).reshape(*v.shape)
-
-        features = np.linspace(-1.5, 0.3, num=(N * D)).reshape(N, D)
-        captions = (np.arange(N * T) % V).reshape(N, T)
-
-        loss, grads = model.loss(features, captions)
-        expected_loss = 9.83235591003
-
-        print('loss: ', loss)
-        print('expected loss: ', expected_loss)
-        print('difference: ', abs(loss - expected_loss))
-        self.assert_small(abs(loss - expected_loss))
-
-    def test_captioning_rnn_grads(self):
-        np.random.seed(231)
-
-        batch_size = 2
-        timesteps = 3
-        input_dim = 4
-        wordvec_dim = 5
-        hidden_dim = 6
-        word_to_idx = {'<NULL>': 0, 'cat': 2, 'dog': 3}
-        vocab_size = len(word_to_idx)
-
-        captions = np.random.randint(vocab_size, size=(batch_size, timesteps))
-        features = np.random.randn(batch_size, input_dim)
-
-        model = CaptioningRNN(word_to_idx,
-                              input_dim=input_dim,
-                              wordvec_dim=wordvec_dim,
-                              hidden_dim=hidden_dim,
-                              cell_type='rnn',
-                              dtype=np.float64,
-                              )
-
-        loss, grads = model.loss(features, captions)
-
-        for param_name in sorted(grads):
-            f = lambda _: model.loss(features, captions)[0]
-            param_grad_num = eval_numerical_gradient(f, model.params[param_name], verbose=False,
-                                                     h=1e-6)
-            e = rel_error_assert(param_grad_num, grads[param_name])
-            print('%s relative error: %e' % (param_name, e))
 
     def test_lstm_step_forward(self):
         N, D, H = 3, 4, 5
@@ -425,3 +368,62 @@ class TestNB1(unittest.TestCase):
         dx_num = eval_numerical_gradient(lambda x: temporal_softmax_loss(x, y, mask)[0], x,
                                          verbose=False)
         print('dx error: ', rel_error_assert(dx, dx_num, 1e-7))
+
+    def test_captioning_rnn(self):
+        N, D, W, H = 10, 20, 30, 40
+        word_to_idx = {'<NULL>': 0, 'cat': 2, 'dog': 3}
+        V = len(word_to_idx)
+        T = 13
+
+        model = CaptioningRNN(word_to_idx,
+                              input_dim=D,
+                              wordvec_dim=W,
+                              hidden_dim=H,
+                              cell_type='rnn',
+                              dtype=np.float64)
+
+        # Set all model parameters to fixed values
+        for k, v in model.params.items():
+            model.params[k] = np.linspace(-1.4, 1.3, num=v.size).reshape(*v.shape)
+
+        features = np.linspace(-1.5, 0.3, num=(N * D)).reshape(N, D)
+        captions = (np.arange(N * T) % V).reshape(N, T)
+
+        loss, grads = model.loss(features, captions)
+        expected_loss = 9.83235591003
+
+        print('loss: ', loss)
+        print('expected loss: ', expected_loss)
+        print('difference: ', )
+        self.assertGreater(1e-10, abs(loss - expected_loss))
+
+    def test_captioning_rnn_grads(self):
+        np.random.seed(231)
+
+        batch_size = 2
+        timesteps = 3
+        input_dim = 4
+        wordvec_dim = 5
+        hidden_dim = 6
+        word_to_idx = {'<NULL>': 0, 'cat': 2, 'dog': 3}
+        vocab_size = len(word_to_idx)
+
+        captions = np.random.randint(vocab_size, size=(batch_size, timesteps))
+        features = np.random.randn(batch_size, input_dim)
+
+        model = CaptioningRNN(word_to_idx,
+                              input_dim=input_dim,
+                              wordvec_dim=wordvec_dim,
+                              hidden_dim=hidden_dim,
+                              cell_type='rnn',
+                              dtype=np.float64,
+                              )
+
+        loss, grads = model.loss(features, captions)
+
+        for param_name in sorted(grads):
+            f = lambda _: model.loss(features, captions)[0]
+            param_grad_num = eval_numerical_gradient(f, model.params[param_name], verbose=False,
+                                                     h=1e-6)
+            e = rel_error_assert(param_grad_num, grads[param_name], 1e-6)
+            print('%s relative error: %e' % (param_name, e))
