@@ -7,149 +7,19 @@ from cs231n.classifiers.rnn import CaptioningRNN
 from cs231n.coco_utils import load_coco_data, sample_coco_minibatch, decode_captions
 from cs231n.image_utils import image_from_url
 
-def rel_error(x, y):
+
+def rel_error_assert(x, y):
     """ returns relative error """
     return np.max(np.abs(x - y) / (np.maximum(1e-8, np.abs(x) + np.abs(y))))
 
-class TestNB1(unittest.TestCase):
-    def test_rnn_step_forward(self):
-        N, D, H = 3, 10, 4
 
-        x = np.linspace(-0.4, 0.7, num=N * D).reshape(N, D)
-        prev_h = np.linspace(-0.2, 0.5, num=N * H).reshape(N, H)
-        Wx = np.linspace(-0.1, 0.9, num=D * H).reshape(D, H)
-        Wh = np.linspace(-0.3, 0.7, num=H * H).reshape(H, H)
-        b = np.linspace(-0.2, 0.4, num=H)
-
-        next_h, _ = rnn_step_forward(x, prev_h, Wx, Wh, b)
-        expected_next_h = np.asarray([
-            [-0.58172089, -0.50182032, -0.41232771, -0.31410098],
-            [0.66854692, 0.79562378, 0.87755553, 0.92795967],
-            [0.97934501, 0.99144213, 0.99646691, 0.99854353]])
-
-        err = rel_error(expected_next_h, next_h)
-        self.assertGreaterEqual(1e-8, err)
-
-    def test_rnn_step_backward(self):
-        np.random.seed(231)
-        N, D, H = 4, 5, 6
-        x = np.random.randn(N, D)
-        h = np.random.randn(N, H)
-        Wx = np.random.randn(D, H)
-        Wh = np.random.randn(H, H)
-        b = np.random.randn(H)
-
-        out, cache = rnn_step_forward(x, h, Wx, Wh, b)
-
-        dnext_h = np.random.randn(*out.shape)
-
-        fx = lambda x: rnn_step_forward(x, h, Wx, Wh, b)[0]
-        fh = lambda h: rnn_step_forward(x, h, Wx, Wh, b)[0]
-        fWx = lambda Wx: rnn_step_forward(x, h, Wx, Wh, b)[0]
-        fWh = lambda Wh: rnn_step_forward(x, h, Wx, Wh, b)[0]
-        fb = lambda b: rnn_step_forward(x, h, Wx, Wh, b)[0]
-
-        dx_num = eval_numerical_gradient_array(fx, x, dnext_h)
-        dprev_h_num = eval_numerical_gradient_array(fh, h, dnext_h)
-        dWx_num = eval_numerical_gradient_array(fWx, Wx, dnext_h)
-        dWh_num = eval_numerical_gradient_array(fWh, Wh, dnext_h)
-        db_num = eval_numerical_gradient_array(fb, b, dnext_h)
-
-        dx, dprev_h, dWx, dWh, db = rnn_step_backward(dnext_h, cache)
+unittest.TestCase.assert_small = lambda self, x: self.assertGreater(1e-8, x)
 
 
-        print('dx error: ', rel_error(dx_num, dx))
-        self.assertGreaterEqual(1e-8, rel_error(dx_num, dx))
-        print('dprev_h error: ',  rel_error(dprev_h_num, dprev_h))
-        self.assertGreaterEqual(1e-8, rel_error(dprev_h_num, dprev_h))
-        print('dWx error: ', rel_error(dWx_num, dWx))
-        self.assertGreaterEqual(1e-8, rel_error(dWx_num, dWx))
-        print('dWh error: ', rel_error(dWh_num, dWh))
-        self.assertGreaterEqual(1e-8, rel_error(dWh_num, dWh))
-        print('db error: ', rel_error(db_num, db))
-        self.assertGreaterEqual(1e-8, rel_error(db_num, db))
-
-    def test_rnn_forward_backward(self):
-        np.random.seed(231)
-
-        N, D, T, H = 2, 3, 10, 5
-
-        x = np.random.randn(N, T, D)
-        h0 = np.random.randn(N, H)
-        Wx = np.random.randn(D, H)
-        Wh = np.random.randn(H, H)
-        b = np.random.randn(H)
-
-        out, cache = rnn_forward(x, h0, Wx, Wh, b)
-
-        dout = np.random.randn(*out.shape)
-
-        dx, dh0, dWx, dWh, db = rnn_backward(dout, cache)
-
-        fx = lambda x: rnn_forward(x, h0, Wx, Wh, b)[0]
-        fh0 = lambda h0: rnn_forward(x, h0, Wx, Wh, b)[0]
-        fWx = lambda Wx: rnn_forward(x, h0, Wx, Wh, b)[0]
-        fWh = lambda Wh: rnn_forward(x, h0, Wx, Wh, b)[0]
-        fb = lambda b: rnn_forward(x, h0, Wx, Wh, b)[0]
-
-        dx_num = eval_numerical_gradient_array(fx, x, dout)
-        dh0_num = eval_numerical_gradient_array(fh0, h0, dout)
-        dWx_num = eval_numerical_gradient_array(fWx, Wx, dout)
-        dWh_num = eval_numerical_gradient_array(fWh, Wh, dout)
-        db_num = eval_numerical_gradient_array(fb, b, dout)
-
-
-        print('dx error: ', rel_error(dx_num, dx))
-        self.assertGreaterEqual(1e-8, rel_error(dx_num, dx))
-        print('dh0 error: ', rel_error(dh0_num, dh0))
-        self.assertGreaterEqual(1e-8, rel_error(dh0_num, dh0))
-        print('dWx error: ', rel_error(dWx_num, dWx))
-        self.assertGreaterEqual(1e-8, rel_error(dWx_num, dWx))
-        print('dWh error: ', rel_error(dWh_num, dWh))
-        self.assertGreaterEqual(1e-8, rel_error(dWh_num, dWh))
-        print('db error: ', rel_error(db_num, db))
-        self.assertGreaterEqual(1e-8, rel_error(db_num, db))
-
-
-
-    def test_word_embedding_forward(self):
-        N, T, V, D = 2, 4, 5, 3
-
-        x = np.asarray([[0, 3, 1, 2], [2, 1, 0, 3]])
-        W = np.linspace(0, 1, num=V * D).reshape(V, D)
-
-        out, _ = word_embedding_forward(x, W)
-        expected_out = np.asarray([
-            [[0., 0.07142857, 0.14285714],
-             [0.64285714, 0.71428571, 0.78571429],
-             [0.21428571, 0.28571429, 0.35714286],
-             [0.42857143, 0.5, 0.57142857]],
-            [[0.42857143, 0.5, 0.57142857],
-             [0.21428571, 0.28571429, 0.35714286],
-             [0., 0.07142857, 0.14285714],
-             [0.64285714, 0.71428571, 0.78571429]]])
-        err = rel_error(expected_out, out)
-        print('out error: ', err)
-        self.assertGreater(1e-8, err)
-
-
-
-    def test_word_embedding_backward(self):
-        np.random.seed(231)
-
-        N, T, V, D = 50, 3, 5, 6
-        x = np.random.randint(V, size=(N, T))
-        W = np.random.randn(V, D)
-
-        out, cache = word_embedding_forward(x, W)
-        dout = np.random.randn(*out.shape)
-        dW = word_embedding_backward(dout, cache)
-
-        f = lambda W: word_embedding_forward(x, W)[0]
-        dW_num = eval_numerical_gradient_array(f, W, dout)
-        err = rel_error(dW, dW_num)
-        print('dW error: ', err)
-        self.assertGreater(1e-8, err)
+def rel_error_assert_assert(a, b):
+    x = rel_error_assert(a, b)
+    assert 1e-8 > x, x
+    return x
 
 
 class TestNB2(unittest.TestCase):
@@ -175,10 +45,13 @@ class TestNB2(unittest.TestCase):
         db_num = eval_numerical_gradient_array(fb, b, dout)
 
         dx, dw, db = temporal_affine_backward(dout, cache)
+        print('dx error: ', rel_error_assert(dx_num, dx))
+        print('dw error: ', rel_error_assert(dw_num, dw))
+        print('db error: ', rel_error_assert(db_num, db))
+        self.assertGreater(1e-8, rel_error_assert(dx_num, dx))
+        self.assertGreater(1e-8, rel_error_assert(dw_num, dw))
+        self.assertGreater(1e-8, rel_error_assert(db_num, db))
 
-        print('dx error: ', rel_error(dx_num, dx))
-        print('dw error: ', rel_error(dw_num, dw))
-        print('db error: ', rel_error(db_num, db))
     def test_temporal_softmax_loss(self):
         N, T, V = 100, 1, 10
 
@@ -203,10 +76,7 @@ class TestNB2(unittest.TestCase):
 
         dx_num = eval_numerical_gradient(lambda x: temporal_softmax_loss(x, y, mask)[0], x,
                                          verbose=False)
-
-        print('dx error: ', rel_error(dx, dx_num))
-
-
+        print('dx error: ', rel_error_assert_assert(dx, dx_num))
 
     def test_captioning_rnn(self):
         N, D, W, H = 10, 20, 30, 40
@@ -234,7 +104,7 @@ class TestNB2(unittest.TestCase):
         print('loss: ', loss)
         print('expected loss: ', expected_loss)
         print('difference: ', abs(loss - expected_loss))
-
+        self.assert_small(abs(loss - expected_loss))
 
     def test_captioning_rnn_grads(self):
         np.random.seed(231)
@@ -264,10 +134,8 @@ class TestNB2(unittest.TestCase):
             f = lambda _: model.loss(features, captions)[0]
             param_grad_num = eval_numerical_gradient(f, model.params[param_name], verbose=False,
                                                      h=1e-6)
-            e = rel_error(param_grad_num, grads[param_name])
+            e = rel_error_assert(param_grad_num, grads[param_name])
             print('%s relative error: %e' % (param_name, e))
-
-
 
     def test_lstm_step_forward(self):
         N, D, H = 3, 4, 5
@@ -289,9 +157,8 @@ class TestNB2(unittest.TestCase):
             [0.66382255, 0.76674007, 0.87195994, 0.97902709, 1.08751345],
             [0.74192008, 0.90592151, 1.07717006, 1.25120233, 1.42395676]])
 
-        print('next_h error: ', rel_error(expected_next_h, next_h))
-        print('next_c error: ', rel_error(expected_next_c, next_c))
-
+        print('next_h error: ', rel_error_assert_assert(expected_next_h, next_h))
+        print('next_c error: ', rel_error_assert_assert(expected_next_c, next_c))
 
     def test_lstm_step_backward(self):
         np.random.seed(231)
@@ -334,13 +201,12 @@ class TestNB2(unittest.TestCase):
 
         dx, dh, dc, dWx, dWh, db = lstm_step_backward(dnext_h, dnext_c, cache)
 
-        print('dx error: ', rel_error(dx_num, dx))
-        print('dh error: ', rel_error(dh_num, dh))
-        print('dc error: ', rel_error(dc_num, dc))
-        print('dWx error: ', rel_error(dWx_num, dWx))
-        print('dWh error: ', rel_error(dWh_num, dWh))
-        print('db error: ', rel_error(db_num, db))
-
+        print('dx error: ', rel_error_assert(dx_num, dx))
+        print('dh error: ', rel_error_assert(dh_num, dh))
+        print('dc error: ', rel_error_assert(dc_num, dc))
+        print('dWx error: ', rel_error_assert(dWx_num, dWx))
+        print('dWh error: ', rel_error_assert(dWh_num, dWh))
+        print('db error: ', rel_error_assert(db_num, db))
 
     def test_lstm_forward(self):
         N, D, H, T = 2, 5, 4, 3
@@ -360,7 +226,7 @@ class TestNB2(unittest.TestCase):
              [0.6704845, 0.69350089, 0.71486014, 0.7346449],
              [0.81733511, 0.83677871, 0.85403753, 0.86935314]]])
 
-        print('h error: ', rel_error(expected_h, h))
+        print('h error: ', rel_error_assert(expected_h, h))
 
     def test_lstm_backward(self):
         from cs231n.rnn_layers import lstm_forward, lstm_backward
@@ -392,12 +258,11 @@ class TestNB2(unittest.TestCase):
         dWh_num = eval_numerical_gradient_array(fWh, Wh, dout)
         db_num = eval_numerical_gradient_array(fb, b, dout)
 
-        print('dx error: ', rel_error(dx_num, dx))
-        print('dh0 error: ', rel_error(dh0_num, dh0))
-        print('dWx error: ', rel_error(dWx_num, dWx))
-        print('dWh error: ', rel_error(dWh_num, dWh))
-        print('db error: ', rel_error(db_num, db))
-
+        print('dx error: ', rel_error_assert(dx_num, dx))
+        print('dh0 error: ', rel_error_assert(dh0_num, dh0))
+        print('dWx error: ', rel_error_assert(dWx_num, dWx))
+        print('dWh error: ', rel_error_assert(dWh_num, dWh))
+        print('db error: ', rel_error_assert(db_num, db))
 
     def test_lstm_captioning(self):
         N, D, W, H = 10, 20, 30, 40
@@ -425,3 +290,138 @@ class TestNB2(unittest.TestCase):
         print('loss: ', loss)
         print('expected loss: ', expected_loss)
         print('difference: ', abs(loss - expected_loss))
+
+
+class TestNB1(unittest.TestCase):
+
+    def test_rnn_step_forward(self):
+        N, D, H = 3, 10, 4
+
+        x = np.linspace(-0.4, 0.7, num=N * D).reshape(N, D)
+        prev_h = np.linspace(-0.2, 0.5, num=N * H).reshape(N, H)
+        Wx = np.linspace(-0.1, 0.9, num=D * H).reshape(D, H)
+        Wh = np.linspace(-0.3, 0.7, num=H * H).reshape(H, H)
+        b = np.linspace(-0.2, 0.4, num=H)
+
+        next_h, _ = rnn_step_forward(x, prev_h, Wx, Wh, b)
+        expected_next_h = np.asarray([
+            [-0.58172089, -0.50182032, -0.41232771, -0.31410098],
+            [0.66854692, 0.79562378, 0.87755553, 0.92795967],
+            [0.97934501, 0.99144213, 0.99646691, 0.99854353]])
+
+        err = rel_error_assert(expected_next_h, next_h)
+        self.assertGreaterEqual(1e-8, err)
+
+    def test_rnn_step_backward(self):
+        np.random.seed(231)
+        N, D, H = 4, 5, 6
+        x = np.random.randn(N, D)
+        h = np.random.randn(N, H)
+        Wx = np.random.randn(D, H)
+        Wh = np.random.randn(H, H)
+        b = np.random.randn(H)
+
+        out, cache = rnn_step_forward(x, h, Wx, Wh, b)
+
+        dnext_h = np.random.randn(*out.shape)
+
+        fx = lambda x: rnn_step_forward(x, h, Wx, Wh, b)[0]
+        fh = lambda h: rnn_step_forward(x, h, Wx, Wh, b)[0]
+        fWx = lambda Wx: rnn_step_forward(x, h, Wx, Wh, b)[0]
+        fWh = lambda Wh: rnn_step_forward(x, h, Wx, Wh, b)[0]
+        fb = lambda b: rnn_step_forward(x, h, Wx, Wh, b)[0]
+
+        dx_num = eval_numerical_gradient_array(fx, x, dnext_h)
+        dprev_h_num = eval_numerical_gradient_array(fh, h, dnext_h)
+        dWx_num = eval_numerical_gradient_array(fWx, Wx, dnext_h)
+        dWh_num = eval_numerical_gradient_array(fWh, Wh, dnext_h)
+        db_num = eval_numerical_gradient_array(fb, b, dnext_h)
+
+        dx, dprev_h, dWx, dWh, db = rnn_step_backward(dnext_h, cache)
+
+        print('dx error: ', rel_error_assert(dx_num, dx))
+        self.assertGreaterEqual(1e-8, rel_error_assert(dx_num, dx))
+        print('dprev_h error: ', rel_error_assert(dprev_h_num, dprev_h))
+        self.assertGreaterEqual(1e-8, rel_error_assert(dprev_h_num, dprev_h))
+        print('dWx error: ', rel_error_assert(dWx_num, dWx))
+        self.assertGreaterEqual(1e-8, rel_error_assert(dWx_num, dWx))
+        print('dWh error: ', rel_error_assert(dWh_num, dWh))
+        self.assertGreaterEqual(1e-8, rel_error_assert(dWh_num, dWh))
+        print('db error: ', rel_error_assert(db_num, db))
+        self.assertGreaterEqual(1e-8, rel_error_assert(db_num, db))
+
+    def test_rnn_forward_backward(self):
+        np.random.seed(231)
+
+        N, D, T, H = 2, 3, 10, 5
+
+        x = np.random.randn(N, T, D)
+        h0 = np.random.randn(N, H)
+        Wx = np.random.randn(D, H)
+        Wh = np.random.randn(H, H)
+        b = np.random.randn(H)
+
+        out, cache = rnn_forward(x, h0, Wx, Wh, b)
+
+        dout = np.random.randn(*out.shape)
+
+        dx, dh0, dWx, dWh, db = rnn_backward(dout, cache)
+
+        fx = lambda x: rnn_forward(x, h0, Wx, Wh, b)[0]
+        fh0 = lambda h0: rnn_forward(x, h0, Wx, Wh, b)[0]
+        fWx = lambda Wx: rnn_forward(x, h0, Wx, Wh, b)[0]
+        fWh = lambda Wh: rnn_forward(x, h0, Wx, Wh, b)[0]
+        fb = lambda b: rnn_forward(x, h0, Wx, Wh, b)[0]
+
+        dx_num = eval_numerical_gradient_array(fx, x, dout)
+        dh0_num = eval_numerical_gradient_array(fh0, h0, dout)
+        dWx_num = eval_numerical_gradient_array(fWx, Wx, dout)
+        dWh_num = eval_numerical_gradient_array(fWh, Wh, dout)
+        db_num = eval_numerical_gradient_array(fb, b, dout)
+
+        print('dx error: ', rel_error_assert(dx_num, dx))
+        self.assertGreaterEqual(1e-8, rel_error_assert(dx_num, dx))
+        print('dh0 error: ', rel_error_assert(dh0_num, dh0))
+        self.assertGreaterEqual(1e-8, rel_error_assert(dh0_num, dh0))
+        print('dWx error: ', rel_error_assert(dWx_num, dWx))
+        self.assertGreaterEqual(1e-8, rel_error_assert(dWx_num, dWx))
+        print('dWh error: ', rel_error_assert(dWh_num, dWh))
+        self.assertGreaterEqual(1e-8, rel_error_assert(dWh_num, dWh))
+        print('db error: ', rel_error_assert(db_num, db))
+        self.assertGreaterEqual(1e-8, rel_error_assert(db_num, db))
+
+    def test_word_embedding_forward(self):
+        N, T, V, D = 2, 4, 5, 3
+
+        x = np.asarray([[0, 3, 1, 2], [2, 1, 0, 3]])
+        W = np.linspace(0, 1, num=V * D).reshape(V, D)
+
+        out, _ = word_embedding_forward(x, W)
+        expected_out = np.asarray([
+            [[0., 0.07142857, 0.14285714],
+             [0.64285714, 0.71428571, 0.78571429],
+             [0.21428571, 0.28571429, 0.35714286],
+             [0.42857143, 0.5, 0.57142857]],
+            [[0.42857143, 0.5, 0.57142857],
+             [0.21428571, 0.28571429, 0.35714286],
+             [0., 0.07142857, 0.14285714],
+             [0.64285714, 0.71428571, 0.78571429]]])
+        err = rel_error_assert(expected_out, out)
+
+    def test_word_embedding_backward(self):
+        np.random.seed(231)
+
+        N, T, V, D = 50, 3, 5, 6
+        x = np.random.randint(V, size=(N, T))
+        W = np.random.randn(V, D)
+
+        out, cache = word_embedding_forward(x, W)
+        dout = np.random.randn(*out.shape)
+        dW = word_embedding_backward(dout, cache)
+
+        f = lambda W: word_embedding_forward(x, W)[0]
+        dW_num = eval_numerical_gradient_array(f, W, dout)
+
+        err = rel_error_assert(dW, dW_num)
+        print('dW error: ', err)
+

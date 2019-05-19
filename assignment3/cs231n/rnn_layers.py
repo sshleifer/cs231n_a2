@@ -45,12 +45,12 @@ def rnn_step_forward(x, prev_h, Wx, Wh, b):
     return next_h, cache
 
 
-def rnn_step_backward(dnext_h, cache):
+def rnn_step_backward(d_activ, cache):
     """
     Backward pass for a single timestep of a vanilla RNN.
 
     Inputs:
-    - dnext_h: Gradient of loss with respect to next hidden state, of shape (N, H)
+    - d_activ: Gradient of loss with respect to next hidden state, of shape (N, H)
     - cache: Cache object from the forward pass
 
     Returns a tuple of:
@@ -69,13 +69,13 @@ def rnn_step_backward(dnext_h, cache):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     (x, prev_h, Wx, Wh, next_h) = cache
-    dnext_h = dnext_h * (1 - next_h**2)
-    dprev_h = dnext_h @ Wh.T
-    dx = dnext_h @ Wx.T
-    dWx = x.T @ dnext_h
-    dWh = prev_h.T @ dnext_h
+    d_activ = d_activ * (1 - next_h ** 2)
+    dprev_h = d_activ @ Wh.T
+    dx = d_activ @ Wx.T
+    dWx = x.T @ d_activ
+    dWh = prev_h.T @ d_activ
 
-    db = dnext_h.sum(0)
+    db = d_activ.sum(0)
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return dx, dprev_h, dWx, dWh, db
 
@@ -181,8 +181,11 @@ def word_embedding_forward(x, W):
     # HINT: This can be done in one line using NumPy's array indexing.           #
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+    N, T = x.shape
+    D = W.shape[1]
+    indices = x.reshape(-1,)
+    out = W[indices].reshape((N, T, D))
+    cache = (x,indices, W)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return out, cache
@@ -211,9 +214,11 @@ def word_embedding_backward(dout, cache):
     # HINT: Look up the function np.add.at                                       #
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
-
+    (x, indices, W) = cache
+    N, T = x.shape
+    D = W.shape[1]
+    dW = np.zeros_like(W)
+    np.add.at(dW, indices, dout.reshape(N*T, D))
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
     #                               END OF YOUR CODE                             #
@@ -227,7 +232,7 @@ def sigmoid(x):
     """
     pos_mask = (x >= 0)
     neg_mask = (x < 0)
-    z = Z_like(x)
+    z = np.zeros_like(x)
     z[pos_mask] = np.exp(-x[pos_mask])
     z[neg_mask] = np.exp(x[neg_mask])
     top = np.ones_like(x)
