@@ -8,6 +8,7 @@ This file defines layer types that are commonly used for recurrent neural
 networks.
 """
 
+Z = np.zeros
 
 def rnn_step_forward(x, prev_h, Wx, Wh, b):
     """
@@ -145,7 +146,7 @@ def rnn_backward(dh, cache):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     N,T,H = dh.shape
     D = cache[0][0].shape[1]
-    Z = np.zeros
+
     dx, dh0, dWx, dWh, db = Z((N, T, D)), Z((N, H)), Z((D, H)), Z((H, H)), Z((H))
     for t in reversed(range(T)):
         dxt, dh0t, dWxt, dWht, dbt = rnn_step_backward(dh[:, t], cache[t])
