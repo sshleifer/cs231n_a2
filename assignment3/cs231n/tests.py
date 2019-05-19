@@ -233,6 +233,9 @@ class TestNB1(unittest.TestCase):
         print('expected loss: ', expected_loss)
         print('difference: ', abs(loss - expected_loss))
         self.assertGreater(1e-10, abs(loss - expected_loss))
+        sample_captions = model.sample(features)
+        assert isinstance(sample_captions, np.ndarray)
+
 
     def test_captioning_rnn_grads(self):
         np.random.seed(231)
