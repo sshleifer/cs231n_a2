@@ -8,7 +8,7 @@ from cs231n.coco_utils import load_coco_data, sample_coco_minibatch, decode_capt
 from cs231n.image_utils import image_from_url
 
 
-def rel_error_assert(x, y):
+def rel_error(x, y):
     """ returns relative error """
     return np.max(np.abs(x - y) / (np.maximum(1e-8, np.abs(x) + np.abs(y))))
 
@@ -16,9 +16,9 @@ def rel_error_assert(x, y):
 unittest.TestCase.assert_small = lambda self, x: self.assertGreater(1e-8, x)
 
 
-def rel_error_assert_assert(a, b):
-    x = rel_error_assert(a, b)
-    assert 1e-8 > x, x
+def rel_error_assert(a, b, tol=1e-8):
+    x = rel_error(a, b)
+    assert tol > x, x
     return x
 
 
@@ -406,7 +406,7 @@ class TestNB1(unittest.TestCase):
              [0.21428571, 0.28571429, 0.35714286],
              [0., 0.07142857, 0.14285714],
              [0.64285714, 0.71428571, 0.78571429]]])
-        err = rel_error_assert(expected_out, out)
+        err = rel_error_assert(expected_out, out, tol=1.01e-8)
 
     def test_word_embedding_backward(self):
         np.random.seed(231)
@@ -422,6 +422,6 @@ class TestNB1(unittest.TestCase):
         f = lambda W: word_embedding_forward(x, W)[0]
         dW_num = eval_numerical_gradient_array(f, W, dout)
 
-        err = rel_error_assert(dW, dW_num)
+        err = rel_error_assert(dW, dW_num, tol=1e-11)
         print('dW error: ', err)
 
