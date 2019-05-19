@@ -103,13 +103,14 @@ def rnn_forward(x, h0, Wx, Wh, b):
     # above. You can use a for loop to help compute the forward pass.            #
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    h, cache = [], []
+
+    (N, T, D) = x.shape
+    H = Wx.shape[1]
     ht = h0
+    h  = np.zeros((N, T, H))
+    cache = {}
     for t in range(x.shape[1]):
-        ht, cachet = rnn_step_forward(x[:,t], ht,Wx, Wh, b)
-        h.append(ht)
-        cache.append(cachet)
-    h = np.array(h).transpose([1, 0, 2])  # To N, T,   H
+        h[:,t], cache[t] = rnn_step_forward(x[:,t], ht, Wx, Wh, b)
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     return h, cache
@@ -142,14 +143,18 @@ def rnn_backward(dh, cache):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     N,T,H = dh.shape
-    dxt, dh0, dWx, dWh, db = rnn_step_backward(dh[:, -1], cache[-1])
-    dx = np.zeros((dxt.shape[0], T, dxt.shape[1]))
-    dx[:, -1] = dxt
-    for t in range(T - 2, -1, -1):
-        tmp = rnn_step_backward(dh[:, t], cache[t])
-        dx[:, t] = tmp[0]
-        for p, grad in zip([dh0, dWx, dWh, db], tmp[1:]):
-            p += grad
+    D = cache[0][0].shape[1]
+    dx, dh0, dWx, dWh, db = np.zeros((N, T, D)), np.zeros((N, H)), np.zeros((D, H)), np.zeros(
+        (H, H)), np.zeros((H))
+    #dxt, dh0, dWx, dWh, db = rnn_step_backward(dh[:, -1], cache[-1])
+    #dx = np.zeros((dxt.shape[0], T, dxt.shape[1]))
+    #dx[:, -1] = dxt
+    for t in reversed(range(T)):
+        dxt, dh0, dWxt, dWht, dbt = rnn_step_backward(dh[:, t], cache[t])
+        dx[:,t] = dxt
+        dWx+= dWxt
+        dWh+=dWht
+        db +=t
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return dx, dh0, dWx, dWh, db
 
@@ -180,9 +185,6 @@ def word_embedding_forward(x, W):
     pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ##############################################################################
-    #                               END OF YOUR CODE                             #
-    ##############################################################################
     return out, cache
 
 

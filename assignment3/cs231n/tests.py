@@ -30,9 +30,7 @@ class TestNB1(unittest.TestCase):
         err = rel_error(expected_next_h, next_h)
         self.assertGreaterEqual(1e-8, err)
 
-
     def test_rnn_step_backward(self):
-        from cs231n.rnn_layers import rnn_step_forward, rnn_step_backward
         np.random.seed(231)
         N, D, H = 4, 5, 6
         x = np.random.randn(N, D)
@@ -59,12 +57,17 @@ class TestNB1(unittest.TestCase):
 
         dx, dprev_h, dWx, dWh, db = rnn_step_backward(dnext_h, cache)
 
-        print('dx error: ', rel_error(dx_num, dx))
-        print('dprev_h error: ', rel_error(dprev_h_num, dprev_h))
-        print('dWx error: ', rel_error(dWx_num, dWx))
-        print('dWh error: ', rel_error(dWh_num, dWh))
-        print('db error: ', rel_error(db_num, db))
 
+        print('dx error: ', rel_error(dx_num, dx))
+        self.assertGreaterEqual(1e-8, rel_error(dx_num, dx))
+        print('dh0 error: ',  rel_error(dprev_h_num, dprev_h))
+        self.assertGreaterEqual(1e-8, rel_error(dprev_h_num, dprev_h))
+        print('dWx error: ', rel_error(dWx_num, dWx))
+        self.assertGreaterEqual(1e-8, rel_error(dWx_num, dWx))
+        print('dWh error: ', rel_error(dWh_num, dWh))
+        self.assertGreaterEqual(1e-8, rel_error(dWh_num, dWh))
+        print('db error: ', rel_error(db_num, db))
+        self.assertGreaterEqual(1e-8, rel_error(db_num, db))
 
     def test_rnn_forward_backward(self):
         np.random.seed(231)
@@ -95,11 +98,18 @@ class TestNB1(unittest.TestCase):
         dWh_num = eval_numerical_gradient_array(fWh, Wh, dout)
         db_num = eval_numerical_gradient_array(fb, b, dout)
 
+
         print('dx error: ', rel_error(dx_num, dx))
+        self.assertGreaterEqual(1e-8, rel_error(dx_num, dx))
         print('dh0 error: ', rel_error(dh0_num, dh0))
+        self.assertGreaterEqual(1e-8, rel_error(dh0_num, dh0))
         print('dWx error: ', rel_error(dWx_num, dWx))
+        self.assertGreaterEqual(1e-8, rel_error(dWx_num, dWx))
         print('dWh error: ', rel_error(dWh_num, dWh))
+        self.assertGreaterEqual(1e-8, rel_error(dWh_num, dWh))
         print('db error: ', rel_error(db_num, db))
+        self.assertGreaterEqual(1e-8, rel_error(db_num, db))
+
 
 
     def test_word_embedding_forward(self):
@@ -118,8 +128,10 @@ class TestNB1(unittest.TestCase):
              [0.21428571, 0.28571429, 0.35714286],
              [0., 0.07142857, 0.14285714],
              [0.64285714, 0.71428571, 0.78571429]]])
+        err = rel_error(expected_out, out)
+        print('out error: ', err)
+        self.assertGreater(1e-8, err)
 
-        print('out error: ', rel_error(expected_out, out))
 
 
     def test_word_embedding_backward(self):
@@ -135,11 +147,12 @@ class TestNB1(unittest.TestCase):
 
         f = lambda W: word_embedding_forward(x, W)[0]
         dW_num = eval_numerical_gradient_array(f, W, dout)
+        err = rel_error(dW, dW_num)
+        print('dW error: ', err)
+        self.assertGreater(1e-8, err)
 
-        print('dW error: ', rel_error(dW, dW_num))
 
-
-
+class TestNB2(unittest.TestCase):
     def test_temporal_affine_forward(self):
         np.random.seed(231)
 
@@ -254,10 +267,7 @@ class TestNB1(unittest.TestCase):
             e = rel_error(param_grad_num, grads[param_name])
             print('%s relative error: %e' % (param_name, e))
 
-import sys
-print(sys.executable)
 
-class TestNB2(unittest.TestCase):
 
     def test_lstm_step_forward(self):
         N, D, H = 3, 4, 5
