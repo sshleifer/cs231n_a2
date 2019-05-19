@@ -113,15 +113,10 @@ class TestNB1(unittest.TestCase):
         db_num = eval_numerical_gradient_array(fb, b, dout)
 
         print('dx error: ', rel_error_assert(dx_num, dx))
-        self.assertGreaterEqual(1e-8, rel_error_assert(dx_num, dx))
         print('dh0 error: ', rel_error_assert(dh0_num, dh0))
-        self.assertGreaterEqual(1e-8, rel_error_assert(dh0_num, dh0))
         print('dWx error: ', rel_error_assert(dWx_num, dWx))
-        self.assertGreaterEqual(1e-8, rel_error_assert(dWx_num, dWx))
-        print('dWh error: ', rel_error_assert(dWh_num, dWh))
-        self.assertGreaterEqual(1e-8, rel_error_assert(dWh_num, dWh))
+        print('dWh error: ', rel_error_assert(dWh_num, dWh, 1e-6))
         print('db error: ', rel_error_assert(db_num, db))
-        self.assertGreaterEqual(1e-8, rel_error_assert(db_num, db))
 
     def test_word_embedding_forward(self):
         N, T, V, D = 2, 4, 5, 3
@@ -424,4 +419,6 @@ class TestNB2(unittest.TestCase):
 
         print('loss: ', loss)
         print('expected loss: ', expected_loss)
-        print('difference: ', abs(loss - expected_loss))
+        delta = abs(loss - expected_loss)
+        print('difference: ', delta)
+        self.assertGreater(1e-8, delta)

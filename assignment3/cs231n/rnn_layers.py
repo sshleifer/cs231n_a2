@@ -149,13 +149,14 @@ def rnn_backward(dh, cache):
     D = cache[0][0].shape[1]
 
     dx, dh0, dWx, dWh, db = Z((N, T, D)), Z((N, H)), Z((D, H)), Z((H, H)), Z((H))
+    dht = 0
     for t in reversed(range(T)):
-        dxt, dh0t, dWxt, dWht, dbt = rnn_step_backward(dh[:, t], cache[t])
+        dxt, dht, dWxt, dWht, dbt = rnn_step_backward(dht + dh[:, t], cache[t])
         dx[:,t] = dxt
         dWx+= dWxt
         dWh+=dWht
         db += dbt
-        dh0 += dh0t
+    dh0 = dht
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return dx, dh0, dWx, dWh, db
 
