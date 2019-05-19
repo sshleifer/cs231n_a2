@@ -108,7 +108,7 @@ def rnn_forward(x, h0, Wx, Wh, b):
     (N, T, D) = x.shape
     H = Wx.shape[1]
     ht = h0
-    h  = np.zeros((N, T, H))
+    h  = Z((N, T, H))
     cache = {}
     for t in range(x.shape[1]):
         h[:,t], cache[t] = rnn_step_forward(x[:,t], ht, Wx, Wh, b)
@@ -145,11 +145,8 @@ def rnn_backward(dh, cache):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     N,T,H = dh.shape
     D = cache[0][0].shape[1]
-    dx, dh0, dWx, dWh, db = np.zeros((N, T, D)), np.zeros((N, H)), np.zeros((D, H)), np.zeros(
-        (H, H)), np.zeros((H))
-    #dxt, dh0, dWx, dWh, db = rnn_step_backward(dh[:, -1], cache[-1])
-    #dx = np.zeros((dxt.shape[0], T, dxt.shape[1]))
-    #dx[:, -1] = dxt
+    Z = np.zeros
+    dx, dh0, dWx, dWh, db = Z((N, T, D)), Z((N, H)), Z((D, H)), Z((H, H)), Z((H))
     for t in reversed(range(T)):
         dxt, dh0t, dWxt, dWht, dbt = rnn_step_backward(dh[:, t], cache[t])
         dx[:,t] = dxt
@@ -229,7 +226,7 @@ def sigmoid(x):
     """
     pos_mask = (x >= 0)
     neg_mask = (x < 0)
-    z = np.zeros_like(x)
+    z = Z_like(x)
     z[pos_mask] = np.exp(-x[pos_mask])
     z[neg_mask] = np.exp(x[neg_mask])
     top = np.ones_like(x)
