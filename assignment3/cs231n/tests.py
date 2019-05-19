@@ -23,60 +23,7 @@ def rel_error_assert(a, b, tol=1e-8):
 
 
 class TestNB2(unittest.TestCase):
-    def test_temporal_affine_forward(self):
-        np.random.seed(231)
 
-        # Gradient check for temporal affine layer
-        N, T, D, M = 2, 3, 4, 5
-        x = np.random.randn(N, T, D)
-        w = np.random.randn(D, M)
-        b = np.random.randn(M)
-
-        out, cache = temporal_affine_forward(x, w, b)
-
-        dout = np.random.randn(*out.shape)
-
-        fx = lambda x: temporal_affine_forward(x, w, b)[0]
-        fw = lambda w: temporal_affine_forward(x, w, b)[0]
-        fb = lambda b: temporal_affine_forward(x, w, b)[0]
-
-        dx_num = eval_numerical_gradient_array(fx, x, dout)
-        dw_num = eval_numerical_gradient_array(fw, w, dout)
-        db_num = eval_numerical_gradient_array(fb, b, dout)
-
-        dx, dw, db = temporal_affine_backward(dout, cache)
-        print('dx error: ', rel_error_assert(dx_num, dx))
-        print('dw error: ', rel_error_assert(dw_num, dw))
-        print('db error: ', rel_error_assert(db_num, db))
-        self.assertGreater(1e-8, rel_error_assert(dx_num, dx))
-        self.assertGreater(1e-8, rel_error_assert(dw_num, dw))
-        self.assertGreater(1e-8, rel_error_assert(db_num, db))
-
-    def test_temporal_softmax_loss(self):
-        N, T, V = 100, 1, 10
-
-        def check_loss(N, T, V, p):
-            x = 0.001 * np.random.randn(N, T, V)
-            y = np.random.randint(V, size=(N, T))
-            mask = np.random.rand(N, T) <= p
-            print(temporal_softmax_loss(x, y, mask)[0])
-
-        check_loss(100, 1, 10, 1.0)  # Should be about 2.3
-        check_loss(100, 10, 10, 1.0)  # Should be about 23
-        check_loss(5000, 10, 10, 0.1)  # Should be about 2.3
-
-        # Gradient check for temporal softmax loss
-        N, T, V = 7, 8, 9
-
-        x = np.random.randn(N, T, V)
-        y = np.random.randint(V, size=(N, T))
-        mask = (np.random.rand(N, T) > 0.5)
-
-        loss, dx = temporal_softmax_loss(x, y, mask, verbose=False)
-
-        dx_num = eval_numerical_gradient(lambda x: temporal_softmax_loss(x, y, mask)[0], x,
-                                         verbose=False)
-        print('dx error: ', rel_error_assert_assert(dx, dx_num))
 
     def test_captioning_rnn(self):
         N, D, W, H = 10, 20, 30, 40
@@ -157,8 +104,8 @@ class TestNB2(unittest.TestCase):
             [0.66382255, 0.76674007, 0.87195994, 0.97902709, 1.08751345],
             [0.74192008, 0.90592151, 1.07717006, 1.25120233, 1.42395676]])
 
-        print('next_h error: ', rel_error_assert_assert(expected_next_h, next_h))
-        print('next_c error: ', rel_error_assert_assert(expected_next_c, next_c))
+        print('next_h error: ', rel_error_assert(expected_next_h, next_h))
+        print('next_c error: ', rel_error_assert(expected_next_c, next_c))
 
     def test_lstm_step_backward(self):
         np.random.seed(231)
@@ -425,3 +372,56 @@ class TestNB1(unittest.TestCase):
         err = rel_error_assert(dW, dW_num, tol=1e-11)
         print('dW error: ', err)
 
+    def test_temporal_affine_forward(self):
+        np.random.seed(231)
+
+        # Gradient check for temporal affine layer
+        N, T, D, M = 2, 3, 4, 5
+        x = np.random.randn(N, T, D)
+        w = np.random.randn(D, M)
+        b = np.random.randn(M)
+
+        out, cache = temporal_affine_forward(x, w, b)
+
+        dout = np.random.randn(*out.shape)
+
+        fx = lambda x: temporal_affine_forward(x, w, b)[0]
+        fw = lambda w: temporal_affine_forward(x, w, b)[0]
+        fb = lambda b: temporal_affine_forward(x, w, b)[0]
+
+        dx_num = eval_numerical_gradient_array(fx, x, dout)
+        dw_num = eval_numerical_gradient_array(fw, w, dout)
+        db_num = eval_numerical_gradient_array(fb, b, dout)
+
+        dx, dw, db = temporal_affine_backward(dout, cache)
+        TOL = 1e-9
+        print('dx error: ', rel_error_assert(dx_num, dx, TOL))
+        print('dw error: ', rel_error_assert(dw_num, dw, TOL))
+        print('db error: ', rel_error_assert(db_num, db, TOL))
+
+
+    def test_temporal_softmax_loss(self):
+        N, T, V = 100, 1, 10
+
+        def check_loss(N, T, V, p):
+            x = 0.001 * np.random.randn(N, T, V)
+            y = np.random.randint(V, size=(N, T))
+            mask = np.random.rand(N, T) <= p
+            print(temporal_softmax_loss(x, y, mask)[0])
+
+        check_loss(100, 1, 10, 1.0)  # Should be about 2.3
+        check_loss(100, 10, 10, 1.0)  # Should be about 23
+        check_loss(5000, 10, 10, 0.1)  # Should be about 2.3
+
+        # Gradient check for temporal softmax loss
+        N, T, V = 7, 8, 9
+
+        x = np.random.randn(N, T, V)
+        y = np.random.randint(V, size=(N, T))
+        mask = (np.random.rand(N, T) > 0.5)
+
+        loss, dx = temporal_softmax_loss(x, y, mask, verbose=False)
+
+        dx_num = eval_numerical_gradient(lambda x: temporal_softmax_loss(x, y, mask)[0], x,
+                                         verbose=False)
+        print('dx error: ', rel_error_assert(dx, dx_num, 1e-7))
