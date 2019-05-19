@@ -44,7 +44,7 @@ class TestNB1(unittest.TestCase):
         dnext_h = np.random.randn(*out.shape)
 
         fx = lambda x: rnn_step_forward(x, h, Wx, Wh, b)[0]
-        fh = lambda prev_h: rnn_step_forward(x, h, Wx, Wh, b)[0]
+        fh = lambda h: rnn_step_forward(x, h, Wx, Wh, b)[0]
         fWx = lambda Wx: rnn_step_forward(x, h, Wx, Wh, b)[0]
         fWh = lambda Wh: rnn_step_forward(x, h, Wx, Wh, b)[0]
         fb = lambda b: rnn_step_forward(x, h, Wx, Wh, b)[0]
@@ -60,7 +60,7 @@ class TestNB1(unittest.TestCase):
 
         print('dx error: ', rel_error(dx_num, dx))
         self.assertGreaterEqual(1e-8, rel_error(dx_num, dx))
-        print('dh0 error: ',  rel_error(dprev_h_num, dprev_h))
+        print('dprev_h error: ',  rel_error(dprev_h_num, dprev_h))
         self.assertGreaterEqual(1e-8, rel_error(dprev_h_num, dprev_h))
         print('dWx error: ', rel_error(dWx_num, dWx))
         self.assertGreaterEqual(1e-8, rel_error(dWx_num, dWx))

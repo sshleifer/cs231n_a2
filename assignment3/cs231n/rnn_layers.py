@@ -68,12 +68,13 @@ def rnn_step_backward(dnext_h, cache):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     (x, prev_h, Wx, Wh, next_h) = cache
-    d_activ = dnext_h * (1 -  np.tanh(next_h)**2)
-    dx = d_activ @ Wx.T
-    dWx = x.T @ d_activ
-    dWh = prev_h.T @ d_activ
-    dprev_h = d_activ @ Wh.T
-    db = d_activ.sum(0)
+    dnext_h = dnext_h * (1 - next_h**2)
+    dprev_h = dnext_h @ Wh.T
+    dx = dnext_h @ Wx.T
+    dWx = x.T @ dnext_h
+    dWh = prev_h.T @ dnext_h
+
+    db = dnext_h.sum(0)
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return dx, dprev_h, dWx, dWh, db
 
@@ -150,11 +151,12 @@ def rnn_backward(dh, cache):
     #dx = np.zeros((dxt.shape[0], T, dxt.shape[1]))
     #dx[:, -1] = dxt
     for t in reversed(range(T)):
-        dxt, dh0, dWxt, dWht, dbt = rnn_step_backward(dh[:, t], cache[t])
+        dxt, dh0t, dWxt, dWht, dbt = rnn_step_backward(dh[:, t], cache[t])
         dx[:,t] = dxt
         dWx+= dWxt
         dWh+=dWht
-        db +=t
+        db += dbt
+        dh0 += dh0t
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return dx, dh0, dWx, dWh, db
 
