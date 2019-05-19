@@ -141,7 +141,6 @@ class CaptioningRNN(object):
         # in your implementation, if needed.                                       #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        do_rnn = self.cell_type == 'rnn'
         h0, aff_cache = affine_forward(features, W_proj, b_proj)
         print(h0.shape)
         embs_in, embs_cache = word_embedding_forward(captions_in, W_embed)
