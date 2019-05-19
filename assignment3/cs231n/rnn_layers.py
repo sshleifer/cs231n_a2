@@ -28,20 +28,19 @@ def rnn_step_forward(x, prev_h, Wx, Wh, b):
     - next_h: Next hidden state, of shape (N, H)
     - cache: Tuple of values needed for the backward pass.
     """
-    next_h, cache = None, None
     ##############################################################################
     # TODO: Implement a single forward step for the vanilla RNN. Store the next  #
     # hidden state and any values you need for the backward pass in the next_h   #
     # and cache variables respectively.                                          #
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    input_activs = x @ Wx  # (N, H)
 
-    pass
-
+    h2h_activs = prev_h @ Wh
+    a_t = (input_activs + h2h_activs) + b
+    next_h = np.tanh(a_t)
+    cache = (x, prev_h, Wx, Wh, next_h)
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ##############################################################################
-    #                               END OF YOUR CODE                             #
-    ##############################################################################
     return next_h, cache
 
 
@@ -68,13 +67,14 @@ def rnn_step_backward(dnext_h, cache):
     # of the output value from tanh.                                             #
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
-
+    (x, prev_h, Wx, Wh, next_h) = cache
+    d_activ = dnext_h * (1 -  np.tanh(next_h)**2)
+    dx = d_activ @ Wx.T
+    dWx = x.T @ d_activ
+    dWh = prev_h.T @ d_activ
+    dprev_h = d_activ @ Wh.T
+    db = d_activ.sum(0)
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    ##############################################################################
-    #                               END OF YOUR CODE                             #
-    ##############################################################################
     return dx, dprev_h, dWx, dWh, db
 
 

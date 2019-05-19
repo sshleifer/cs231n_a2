@@ -254,7 +254,8 @@ class TestNB1(unittest.TestCase):
             e = rel_error(param_grad_num, grads[param_name])
             print('%s relative error: %e' % (param_name, e))
 
-
+import sys
+print(sys.executable)
 
 class TestNB2(unittest.TestCase):
 
