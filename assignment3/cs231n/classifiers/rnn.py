@@ -218,8 +218,10 @@ class CaptioningRNN(object):
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         c = 0
         D = W_embed.shape[1]
-        word_idx = np.zeros((N, 1)).astype(int) # TODO(SS): use start token
-        word_idx = np.array([self._start] * N)[:, None]
+        if self._start is not None:
+            word_idx = np.array([self._start] * N)[:, None]
+        else:
+            word_idx = np.zeros((N, 1)).astype(int)
         h, aff_cache = affine_forward(features, W_proj, b_proj)
         for t in range(max_length):
             if t!= 0:
