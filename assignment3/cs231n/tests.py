@@ -420,8 +420,11 @@ class TestNB2(unittest.TestCase):
         loss, grads = model.loss(features, captions)
         expected_loss = 9.82445935443
 
+
         print('loss: ', loss)
         print('expected loss: ', expected_loss)
         delta = abs(loss - expected_loss)
         print('difference: ', delta)
         self.assertGreater(1e-8, delta)
+
+        model.sample(features)

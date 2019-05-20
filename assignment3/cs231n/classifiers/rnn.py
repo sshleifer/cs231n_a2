@@ -216,24 +216,25 @@ class CaptioningRNN(object):
         # you are using an LSTM, initialize the first cell state to zeros.        #
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        first_c = 0
+        c = 0
         D = W_embed.shape[1]
-        last_word = np.zeros((N, D)).astype(int)
+        word_idx = np.zeros((N, 1)).astype(int) # TODO(SS): use start token
         h, aff_cache = affine_forward(features, W_proj, b_proj)
-        for i in range(max_length):
+        for t in range(max_length):
+            if t!= 0:
+                embs_in, _ = word_embedding_forward(word_idx, W_embed)
+                embs_in = embs_in.reshape(N, D)
+            else:
+                embs_in = Z((N,D))
 
-            embs_in, _ = word_embedding_forward(last_word, W_embed)
             #embs_in = embs_in.reshape(-1,  D)
             if self.cell_type == 'rnn':
                 h, _ = rnn_step_forward(embs_in, h, Wx, Wh, b)
             else:
                 h,c,_ = lstm_step_forward(embs_in, h, c, Wx, Wh, b)
             out, _ = affine_forward(h, W_vocab, b_vocab)
-            word_idx = np.argmax(out, 1)
-            captions[:,i] = word_idx
-
-        pass
-
+            word_idx = np.argmax(out, 1).reshape(-1, 1)
+            captions[:,t:t+1] = word_idx
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
