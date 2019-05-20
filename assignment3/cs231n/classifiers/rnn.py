@@ -142,7 +142,6 @@ class CaptioningRNN(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         h0, aff_cache = affine_forward(features, W_proj, b_proj)
-        print(h0.shape)
         embs_in, embs_cache = word_embedding_forward(captions_in, W_embed)
         fwd, bwd = (rnn_forward, rnn_backward) if self.cell_type=='rnn' else (lstm_forward, lstm_backward)
         h, cache = fwd(embs_in, h0, Wx, Wh, b)
