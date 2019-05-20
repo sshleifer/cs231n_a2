@@ -219,12 +219,15 @@ class CaptioningRNN(object):
         c = 0
         D = W_embed.shape[1]
         word_idx = np.zeros((N, 1)).astype(int) # TODO(SS): use start token
+        word_idx = np.array([self._start] * N)[:, None]
         h, aff_cache = affine_forward(features, W_proj, b_proj)
         for t in range(max_length):
             if t!= 0:
                 embs_in, _ = word_embedding_forward(word_idx, W_embed)
                 embs_in = embs_in.reshape(N, D)
             else:
+
+                word_embedding_forward(word_idx, W_embed)
                 embs_in = Z((N,D))
 
             #embs_in = embs_in.reshape(-1,  D)
